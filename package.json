@@ -1,0 +1,17 @@
+{
+  "name": "fsqmap",
+  "version": "1.0.0",
+  "description": "FSQMap - Location-based chat application with Vercel AI SDK",
+  "scripts": {
+    "dev:backend": "cd fsqmap-backend && npm run dev",
+    "dev:frontend": "cd fsqmap-app && npm start",
+    "install:all": "npm install && cd fsqmap-backend && npm install && cd ../fsqmap-app && npm install",
+    "build:backend": "cd fsqmap-backend && npm run build",
+    "start:backend": "cd fsqmap-backend && npm start"
+  },
+  "workspaces": [
+    "fsqmap-backend",
+    "fsqmap-app"
+  ],
+  "private": true
+} 
