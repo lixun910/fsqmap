@@ -6,7 +6,7 @@ import {
   ToolOutputManager,
   ConversationCache,
 } from '@openassistant/utils';
-import { placeSearch } from '@openassistant/places';
+import { placeSearch, geotagging } from '@openassistant/places';
 import { FSQMAP_SYSTEM_MESSAGE } from './systemMessages';
 
 // Create a conversation cache instance with custom configuration
@@ -32,53 +32,43 @@ function createTools(
     { isExecutable: true }
   );
 
+  // @ts-expect-error - placeSearch is a valid tool
+  const geotaggingTool = convertToVercelAiTool(
+    {
+      ...geotagging,
+      context: {
+        getFsqToken: () => process.env.FSQ_TOKEN || '',
+      },
+      onToolCompleted: toolOutputManager.createOnToolCompletedCallback(),
+    },
+    { isExecutable: true }
+  );
+
   return {
     placeSearch: placeSearchTool,
+    geotagging: geotaggingTool,
   };
 }
 
 export async function POST(req: Request) {
   try {
     console.log('Chat API called');
-    console.log('Request headers:', Object.fromEntries(req.headers.entries()));
 
     const { id: requestId, messages } = await req.json();
-    console.log('Received messages:', messages);
+    console.log('Received messages:', JSON.stringify(messages, null, 2));
+    console.log('Request ID:', requestId);
 
     // Get conversation-scoped ToolOutputManager
     const toolOutputManager = await conversationCache.getToolOutputManager(
       requestId
     );
 
+    // Start the session for this request
+    await toolOutputManager.startSession();
+    console.log('Session started for requestId:', requestId);
+
     // Create all tools using the tools utility
     const tools = createTools(toolOutputManager);
-
-    // Get location data from headers
-    const locationHeader = req.headers.get('x-location');
-    let locationData = null;
-
-    if (locationHeader) {
-      try {
-        locationData = JSON.parse(locationHeader);
-        console.log('Parsed location from header:', locationData);
-        // append location to last message
-        messages[
-          messages.length - 1
-        ].content += `\n\nThe user's current location is:
-latitude: ${locationData.latitude}
-longitude: ${locationData.longitude}
-accuracy: ${locationData.accuracy}
-altitude: ${locationData.altitude}
-heading: ${locationData.heading}
-speed: ${locationData.speed}
-timestamp: ${locationData.timestamp}
-`;
-      } catch (e) {
-        console.log('Failed to parse location header:', e);
-      }
-    }
-
-    console.log('Messages:', messages);
 
     return createDataStreamResponse({
       execute: (dataStream) => {
@@ -94,9 +84,13 @@ timestamp: ${locationData.timestamp}
               // Only write tool data to client if tools were actually called in THIS request
               const hasToolOutputsInSession =
                 await toolOutputManager.hasToolOutputsInCurrentSession();
+              console.log('Has tool outputs in session:', hasToolOutputsInSession);
+              
               if (hasToolOutputsInSession) {
                 const lastToolData =
                   await toolOutputManager.getLastToolOutputFromCurrentSession();
+                console.log('Last tool data:', lastToolData);
+                
                 if (lastToolData) {
                   console.log('write toolData back to client', lastToolData);
                   // @ts-expect-error - toolAdditionalData is a record of unknown values
@@ -106,12 +100,14 @@ timestamp: ${locationData.timestamp}
 
               // End the session when request is complete
               await toolOutputManager.endSession();
+              console.log('Session ended for requestId:', requestId);
             },
           });
 
           result.mergeIntoDataStream(dataStream);
         } catch (error) {
           // Ensure session is ended even on error
+          console.error('Error in streamText:', error);
           toolOutputManager.endSession().catch(console.error);
           throw error;
         }

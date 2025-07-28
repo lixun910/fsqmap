@@ -7,43 +7,73 @@ export default function ChatPage() {
   // preserve the tool data between renders
   const toolAdditionalData = useRef<Record<string, unknown>>({});
 
-  const { messages, input, handleInputChange, handleSubmit, isLoading } =
-    useChat({
-      api: '/api/chat',
-      headers: {
-        'x-location': JSON.stringify({
-          latitude: 33.244231,
-          longitude: -111.866503,
-          accuracy: 10,
-          altitude: null,
-          heading: null,
-          speed: null,
-          timestamp: Date.now()
-        })
-      },
-      onToolCall: async ({ toolCall }) => {
-        console.log('toolCall', toolCall);
-      },
-      onFinish: (message) => {
-        // save the message.annotations from server-side tools for rendering tools
-        message.annotations?.forEach((annotation) => {
-          if (typeof annotation === 'object' && annotation !== null) {
-            // annotation is a record of toolCallId and data from server-side tools
-            // save the data for tool rendering
-            if ('toolCallId' in annotation && 'data' in annotation) {
-              const { toolCallId, data } = annotation as {
-                toolCallId: string;
-                data: unknown;
-              };
-              if (toolAdditionalData.current[toolCallId] === undefined) {
-                toolAdditionalData.current[toolCallId] = data;
-              }
+  const {
+    messages,
+    input,
+    handleInputChange: originalHandleInputChange,
+    isLoading,
+    setInput,
+    append,
+  } = useChat({
+    api: '/api/chat',
+    onToolCall: async ({ toolCall }) => {
+      console.log('toolCall', toolCall);
+    },
+    onFinish: (message) => {
+      // save the message.annotations from server-side tools for rendering tools
+      message.annotations?.forEach((annotation) => {
+        if (typeof annotation === 'object' && annotation !== null) {
+          // annotation is a record of toolCallId and data from server-side tools
+          // save the data for tool rendering
+          if ('toolCallId' in annotation && 'data' in annotation) {
+            const { toolCallId, data } = annotation as {
+              toolCallId: string;
+              data: unknown;
+            };
+            if (toolAdditionalData.current[toolCallId] === undefined) {
+              toolAdditionalData.current[toolCallId] = data;
             }
-            console.log('toolAdditionalData', toolAdditionalData.current);
           }
-        });
-      },
+          console.log('toolAdditionalData', toolAdditionalData.current);
+        }
+      });
+    },
+  });
+
+  // Custom handleSubmit that appends location data to the input
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!input.trim()) return;
+
+    // Create location data
+    const locationData = {
+      latitude: 33.244317670169394,
+      longitude: -111.86651104079768,
+      accuracy: 10,
+      altitude: null,
+      heading: null,
+      speed: null,
+      timestamp: Date.now(),
+    };
+
+    // Append location data to the input
+    const inputWithLocation = `${input}\n\nLocation: ${JSON.stringify(
+      locationData
+    )}`;
+
+    console.log('Original input value:', input);
+    console.log('Input with location data:', inputWithLocation);
+
+    // Use the append method to directly submit the message with location data
+    append({
+      role: 'user',
+      content: inputWithLocation,
     });
+
+    // Clear the input
+    setInput('');
+  };
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
@@ -72,7 +102,7 @@ export default function ChatPage() {
       <form onSubmit={handleSubmit} className="flex gap-2">
         <input
           value={input}
-          onChange={handleInputChange}
+          onChange={originalHandleInputChange}
           placeholder="Type your message..."
           className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />

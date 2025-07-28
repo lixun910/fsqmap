@@ -9,36 +9,15 @@ const nextConfig: NextConfig = {
     // !! WARN !!
     ignoreBuildErrors: true,
   },
-  
+
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@openassistant/places': path.resolve('/Users/xun/github/openassistant/packages/tools/places/src'),
+      '@openassistant/places': path.resolve(
+        '/Users/xun/github/openassistant/packages/tools/places/src'
+      ),
     };
     return config;
-  },
-
-  async headers() {
-    return [
-      {
-        // Apply these headers to all routes
-        source: '/(.*)',
-        headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: '*',
-          },
-          {
-            key: 'Access-Control-Allow-Methods',
-            value: 'GET, POST, PUT, DELETE, OPTIONS',
-          },
-          {
-            key: 'Access-Control-Allow-Headers',
-            value: 'Content-Type, Authorization',
-          },
-        ],
-      },
-    ];
   },
 };
 
