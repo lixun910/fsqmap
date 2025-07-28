@@ -1,16 +1,54 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { useRef } from 'react';
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
-    api: '/api/chat',
-  });
+  // preserve the tool data between renders
+  const toolAdditionalData = useRef<Record<string, unknown>>({});
+
+  const { messages, input, handleInputChange, handleSubmit, isLoading } =
+    useChat({
+      api: '/api/chat',
+      headers: {
+        'x-location': JSON.stringify({
+          latitude: 33.244231,
+          longitude: -111.866503,
+          accuracy: 10,
+          altitude: null,
+          heading: null,
+          speed: null,
+          timestamp: Date.now()
+        })
+      },
+      onToolCall: async ({ toolCall }) => {
+        console.log('toolCall', toolCall);
+      },
+      onFinish: (message) => {
+        // save the message.annotations from server-side tools for rendering tools
+        message.annotations?.forEach((annotation) => {
+          if (typeof annotation === 'object' && annotation !== null) {
+            // annotation is a record of toolCallId and data from server-side tools
+            // save the data for tool rendering
+            if ('toolCallId' in annotation && 'data' in annotation) {
+              const { toolCallId, data } = annotation as {
+                toolCallId: string;
+                data: unknown;
+              };
+              if (toolAdditionalData.current[toolCallId] === undefined) {
+                toolAdditionalData.current[toolCallId] = data;
+              }
+            }
+            console.log('toolAdditionalData', toolAdditionalData.current);
+          }
+        });
+      },
+    });
 
   return (
     <div className="flex flex-col h-screen max-w-2xl mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">FSQMap Chat</h1>
-      
+
       <div className="flex-1 overflow-y-auto space-y-4 mb-4">
         {messages.map((message) => (
           <div
@@ -48,4 +86,4 @@ export default function ChatPage() {
       </form>
     </div>
   );
-} 
+}

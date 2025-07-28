@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-async function testAPI() {
+async function testAPI(): Promise<void> {
   try {
     const response = await fetch('http://localhost:3000/api/chat-ai', {
       method: 'POST',

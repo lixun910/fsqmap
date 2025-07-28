@@ -1,6 +1,6 @@
 import fetch from 'node-fetch';
 
-async function testStreamingAPI() {
+async function testStreamingAPI(): Promise<void> {
   try {
     console.log('Testing streaming API...');
     
@@ -43,7 +43,12 @@ async function testStreamingAPI() {
       console.log('✅ Streaming response detected!');
       
       // Read the streaming response
-      const reader = response.body.getReader();
+      const reader = (response.body as any)?.getReader();
+      if (!reader) {
+        console.error('No readable stream available');
+        return;
+      }
+      
       const decoder = new TextDecoder();
       
       console.log('Reading streaming response...');
