@@ -1,19 +1,25 @@
-import React, { useRef } from 'react';
-import { useChat } from '@ai-sdk/react';
-import { fetch as expoFetch } from 'expo/fetch';
+import React, { useState } from 'react';
 import {
   View,
-  TextInput,
-  ScrollView,
   Text,
   SafeAreaView,
   TouchableOpacity,
+  StyleSheet,
+  Dimensions,
 } from 'react-native';
-import Markdown from 'react-native-markdown-display';
+import MapView, { Marker } from 'react-native-maps';
 import { useLocation } from './hooks/useLocation';
-import ToolResult from './components/ToolResult';
+import CheckIn from './CheckIn';
+import FindPlace from './FindPlace';
+import BuyHouse from './BuyHouse';
+import SiteSelect from './SiteSelect';
+
+const { width, height } = Dimensions.get('window');
+
+type Screen = 'main' | 'checkIn' | 'findPlace' | 'buyHouse' | 'siteSelect';
 
 export default function App() {
+  const [currentScreen, setCurrentScreen] = useState<Screen>('main');
   const {
     location,
     isLoading: locationLoading,
@@ -21,147 +27,163 @@ export default function App() {
     getCurrentLocation,
   } = useLocation();
 
-  // preserve the tool data between renders
-  const toolAdditionalData = useRef<Record<string, unknown>>({});
-
-  const {
-    messages,
-    error,
-    handleInputChange,
-    input,
-    handleSubmit,
-    append,
-    setInput,
-  } = useChat({
-    fetch: expoFetch as unknown as typeof globalThis.fetch,
-    api: 'http://localhost:3000/api/chat',
-    onError: (error) => console.error(error, 'ERROR'),
-    onFinish: (message) => {
-      // save the message.annotations from server-side tools for rendering tools
-      message.annotations?.forEach((annotation) => {
-        if (typeof annotation === 'object' && annotation !== null) {
-          // annotation is a record of toolCallId and data from server-side tools
-          // save the data for tool rendering
-          if ('toolCallId' in annotation && 'data' in annotation) {
-            const { toolCallId, data } = annotation as {
-              toolCallId: string;
-              data: unknown;
-            };
-            if (toolAdditionalData.current[toolCallId] === undefined) {
-              toolAdditionalData.current[toolCallId] = data;
-            }
-          }
-          console.log('toolAdditionalData', toolAdditionalData.current);
-        }
-      });
-    },
-  });
-
   // Get location when component mounts
   React.useEffect(() => {
     getCurrentLocation();
   }, []);
 
-  // Helper function to strip location information from message content for display
-  const stripLocationInfo = (content: string): string => {
-    // Remove location information that matches the pattern [Location: ...]
-    return content.replace(/\s*\[Location:[^\]]*\]\s*/, '');
-  };
-
-  // Custom handleSubmit that appends location to the message before sending
-  const handleSubmitWithLocation = () => {
-    // Only proceed if there's input text
-    if (!input || !input.trim()) {
-      return;
-    }
-
-    let finalValue = input;
-
-    // Append location information if available
-    if (location && input && input.trim()) {
-      let locationInfo = ` [Location: ${location.latitude}, ${location.longitude}`;
-
-      // Add altitude if available
-      if (location.altitude !== undefined) {
-        locationInfo += `, Altitude: ${location.altitude}`;
-      }
-
-      // Add accuracy if available
-      if (location.accuracy !== undefined) {
-        locationInfo += `, Accuracy: ${location.accuracy}`;
-      }
-
-      locationInfo += ']';
-      finalValue = input + locationInfo;
-    }
-
-    // Use the append method to send the message with location
-    append({
-      role: 'user',
-      content: finalValue,
-    });
-
-    // Clear the input
-    setInput('');
-  };
-
-  if (error) return <Text>{error.message}</Text>;
-
-  return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <View
-        style={{
-          height: '95%',
-          display: 'flex',
-          flexDirection: 'column',
-          paddingHorizontal: 8,
+  const renderMainScreen = () => (
+    <View style={styles.container}>
+      {/* Map Background */}
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: location?.latitude || 37.78825,
+          longitude: location?.longitude || -122.4324,
+          latitudeDelta: 0.0922,
+          longitudeDelta: 0.0421,
         }}
+        showsUserLocation={false}
+        scrollEnabled={false}
+        zoomEnabled={false}
+        rotateEnabled={false}
+        pitchEnabled={false}
       >
-        
-
-        <ScrollView style={{ flex: 1 }}>
-          {messages.map((m) => (
-            <View key={m.id} style={{ marginVertical: 8 }}>
-              <View>
-                <Text style={{ fontWeight: 700 }}>{m.role}</Text>
-
-                {m.parts.map((p, index) => {
-                  if (p.type === 'text') {
-                    // Strip location info from user messages for display
-                    const displayContent =
-                      m.role === 'user' ? stripLocationInfo(p.text) : p.text;
-                    return <Markdown key={index}>{displayContent}</Markdown>;
-                  } else if (p.type === 'reasoning') {
-                    return <Markdown key={index}>{p.reasoning}</Markdown>;
-                  } else if (p.type === 'tool-invocation') {
-                    return (
-                      <ToolResult
-                        key={index}
-                        toolCallId={p.toolInvocation.toolCallId}
-                        toolName={p.toolInvocation.toolName}
-                        toolData={toolAdditionalData.current[p.toolInvocation.toolCallId]}
-                      />
-                    );
-                  }
-                })}
-              </View>
-            </View>
-          ))}
-        </ScrollView>
-
-        <View style={{ marginTop: 8 }}>
-          <TextInput
-            style={{ backgroundColor: 'white', padding: 8 }}
-            placeholder="Say something..."
-            value={input}
-            onChangeText={(text) =>
-              handleInputChange({ target: { value: text } } as any)
-            }
-            onSubmitEditing={handleSubmitWithLocation}
-            autoFocus={true}
+        {/* Blue marker for user's current location */}
+        {location && (
+          <Marker
+            coordinate={{
+              latitude: location.latitude,
+              longitude: location.longitude,
+            }}
+            pinColor="blue"
           />
+        )}
+      </MapView>
+
+      {/* Overlay with buttons */}
+      <View style={styles.overlay}>
+        <View style={styles.contentContainer}>
+          <Text style={styles.title}>I am</Text>
+          
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setCurrentScreen('checkIn')}
+          >
+            <Text style={styles.buttonText}>checking in</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setCurrentScreen('findPlace')}
+          >
+            <Text style={styles.buttonText}>finding a place</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setCurrentScreen('buyHouse')}
+          >
+            <Text style={styles.buttonText}>buying a house</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setCurrentScreen('siteSelect')}
+          >
+            <Text style={styles.buttonText}>site selecting</Text>
+          </TouchableOpacity>
         </View>
       </View>
+    </View>
+  );
+
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'checkIn':
+        return <CheckIn onBack={() => setCurrentScreen('main')} />;
+      case 'findPlace':
+        return <FindPlace onBack={() => setCurrentScreen('main')} />;
+      case 'buyHouse':
+        return <BuyHouse onBack={() => setCurrentScreen('main')} />;
+      case 'siteSelect':
+        return <SiteSelect onBack={() => setCurrentScreen('main')} />;
+      default:
+        return renderMainScreen();
+    }
+  };
+
+  return (
+    <SafeAreaView style={styles.safeArea}>
+      {renderScreen()}
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+  },
+  map: {
+    width: '100%',
+    height: '100%',
+  },
+  overlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  contentContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 20,
+    padding: 30,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minWidth: width * 0.8,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 12,
+    marginVertical: 8,
+    minWidth: 200,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 3,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+});
