@@ -108,8 +108,6 @@ export const chatStyles = StyleSheet.create({
     flexDirection: 'row',
     padding: 16,
     backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#e9ecef',
     alignItems: 'flex-end',
   },
   input: {

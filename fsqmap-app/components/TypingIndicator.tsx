@@ -2,7 +2,7 @@ import React from 'react';
 import { View, Text } from 'react-native';
 import { chatStyles } from '../styles/chatStyles';
 
-export const TypingIndicator: React.FC = () => {
+export function TypingIndicator() {
   return (
     <View style={chatStyles.typingIndicator}>
       <View style={chatStyles.typingBubble}>

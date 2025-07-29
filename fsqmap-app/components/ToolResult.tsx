@@ -64,11 +64,13 @@ interface ToolResultProps {
   toolData: any;
 }
 
-const ToolResult: React.FC<ToolResultProps> = ({
+export function ToolResult({
   toolCallId,
   toolName,
   toolData,
-}) => {
+}: ToolResultProps) {
+  const { location: userLocation } = useLocation();
+
   const renderLoadingAnimation = () => {
     return (
       <View
@@ -137,7 +139,6 @@ const ToolResult: React.FC<ToolResultProps> = ({
 
     const datasetName = data.datasetName;
     const { content: candidates, metadata, type } = data[datasetName];
-    const { location: userLocation } = useLocation();
 
     return (
       <View style={{ marginVertical: 8 }}>
@@ -422,5 +423,3 @@ const ToolResult: React.FC<ToolResultProps> = ({
       return renderDefaultResult(toolData);
   }
 };
-
-export default ToolResult;

@@ -10,12 +10,12 @@ interface ChatInputProps {
   disabled?: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({
+export function ChatInput({
   inputText,
   onInputChange,
   onSend,
   disabled = false,
-}) => {
+}: ChatInputProps) {
   const isSendDisabled = inputText.trim().length === 0 || disabled;
 
   return (

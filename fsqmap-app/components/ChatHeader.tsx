@@ -9,11 +9,11 @@ interface ChatHeaderProps {
   onMorePress?: () => void;
 }
 
-export const ChatHeader: React.FC<ChatHeaderProps> = ({
+export function ChatHeader({
   title = 'Chat Assistant',
   subtitle = 'Online',
   onMorePress,
-}) => {
+}: ChatHeaderProps) {
   return (
     <View style={chatStyles.header}>
       <View style={chatStyles.headerContent}>

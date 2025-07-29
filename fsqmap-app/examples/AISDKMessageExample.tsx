@@ -22,7 +22,7 @@ const exampleMessages: Message[] = [
   },
 ];
 
-export const AISDKMessageExample: React.FC = () => {
+export function AISDKMessageExample() {
   const renderMessage = ({ item }: { item: Message }) => (
     <ChatMessage message={item} />
   );

@@ -8,7 +8,7 @@ interface ChatMessageProps {
   message: Message | UIMessage;
 }
 
-export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
+export function ChatMessage({ message }: ChatMessageProps) {
   const isUser = message.role === 'user';
   const timestamp = new Date(); // You can add timestamp to the message if needed
 
