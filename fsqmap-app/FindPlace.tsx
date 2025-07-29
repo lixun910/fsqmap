@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native';
+import { NavigationBar } from './components/NavigationBar';
 import { commonStyles } from './styles/commonStyles';
 
 interface FindPlaceProps {
@@ -9,6 +10,7 @@ interface FindPlaceProps {
 export default function FindPlace({ onBack }: FindPlaceProps) {
   return (
     <SafeAreaView style={commonStyles.container}>
+      <NavigationBar title="Find Place" onBack={onBack} />
       <View style={commonStyles.centeredContainer}>
         <Text style={commonStyles.title}>
           Find Place
@@ -16,12 +18,6 @@ export default function FindPlace({ onBack }: FindPlaceProps) {
         <Text style={commonStyles.description}>
           This is the Find Place screen. Implementation coming soon.
         </Text>
-        <TouchableOpacity
-          style={commonStyles.backButton}
-          onPress={onBack}
-        >
-          <Text style={commonStyles.backButtonText}>Back</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

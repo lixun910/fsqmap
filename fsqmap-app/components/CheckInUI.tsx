@@ -9,6 +9,7 @@ import {
 import Markdown from 'react-native-markdown-display';
 import { ToolResult } from './ToolResult';
 import { ChatInput } from './ChatInput';
+import { NavigationBar } from './NavigationBar';
 import { Message } from '../types/Message';
 import { checkInStyles } from '../styles/checkInStyles';
 
@@ -51,6 +52,7 @@ export function CheckInUI({
   if (error) {
     return (
       <SafeAreaView style={checkInStyles.container}>
+        <NavigationBar title="Check In" onBack={onBack} />
         <View style={checkInStyles.mainContainer}>
           <Text style={{ color: 'red', padding: 16 }}>{error.message}</Text>
         </View>
@@ -60,17 +62,7 @@ export function CheckInUI({
 
   return (
     <SafeAreaView style={checkInStyles.container}>
-      {/* Back Button */}
-      {onBack && (
-        <TouchableOpacity
-          style={checkInStyles.backButton}
-          onPress={onBack}
-        >
-          <Text style={checkInStyles.backButtonText}>
-            ← Back
-          </Text>
-        </TouchableOpacity>
-      )}
+      <NavigationBar title="Check In" onBack={onBack} />
 
       <View style={checkInStyles.mainContainer}>
         <ScrollView style={checkInStyles.scrollView}>

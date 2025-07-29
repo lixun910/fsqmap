@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native';
+import { NavigationBar } from './components/NavigationBar';
 import { commonStyles } from './styles/commonStyles';
 
 interface SiteSelectProps {
@@ -9,6 +10,7 @@ interface SiteSelectProps {
 export default function SiteSelect({ onBack }: SiteSelectProps) {
   return (
     <SafeAreaView style={commonStyles.container}>
+      <NavigationBar title="Site Select" onBack={onBack} />
       <View style={commonStyles.centeredContainer}>
         <Text style={commonStyles.title}>
           Site Select
@@ -16,12 +18,6 @@ export default function SiteSelect({ onBack }: SiteSelectProps) {
         <Text style={commonStyles.description}>
           This is the Site Select screen. Implementation coming soon.
         </Text>
-        <TouchableOpacity
-          style={commonStyles.backButton}
-          onPress={onBack}
-        >
-          <Text style={commonStyles.backButtonText}>Back</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );

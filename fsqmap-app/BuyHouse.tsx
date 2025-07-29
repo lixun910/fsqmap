@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity } from 'react-native';
+import { View, Text, SafeAreaView } from 'react-native';
+import { NavigationBar } from './components/NavigationBar';
 import { commonStyles } from './styles/commonStyles';
 
 interface BuyHouseProps {
@@ -9,6 +10,7 @@ interface BuyHouseProps {
 export default function BuyHouse({ onBack }: BuyHouseProps) {
   return (
     <SafeAreaView style={commonStyles.container}>
+      <NavigationBar title="Buy House" onBack={onBack} />
       <View style={commonStyles.centeredContainer}>
         <Text style={commonStyles.title}>
           Buy House
@@ -16,12 +18,6 @@ export default function BuyHouse({ onBack }: BuyHouseProps) {
         <Text style={commonStyles.description}>
           This is the Buy House screen. Implementation coming soon.
         </Text>
-        <TouchableOpacity
-          style={commonStyles.backButton}
-          onPress={onBack}
-        >
-          <Text style={commonStyles.backButtonText}>Back</Text>
-        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
