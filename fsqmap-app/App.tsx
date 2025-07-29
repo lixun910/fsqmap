@@ -40,10 +40,10 @@ export default function App() {
         initialRegion={{
           latitude: location?.latitude || 37.78825,
           longitude: location?.longitude || -122.4324,
-          latitudeDelta: 0.0922,
-          longitudeDelta: 0.0421,
+          latitudeDelta: 0.001, // Smaller delta for better centering
+          longitudeDelta: 0.001, // Smaller delta for better centering
         }}
-        showsUserLocation={false}
+        showsUserLocation={true}
         scrollEnabled={false}
         zoomEnabled={false}
         rotateEnabled={false}
@@ -67,33 +67,43 @@ export default function App() {
           <Text style={styles.title}>I am</Text>
           
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, styles.checkInButton]}
             onPress={() => setCurrentScreen('checkIn')}
           >
-            <Text style={styles.buttonText}>checking in</Text>
+            <Text style={styles.buttonText}>📍 checking in     </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, styles.findPlaceButton]}
             onPress={() => setCurrentScreen('findPlace')}
           >
-            <Text style={styles.buttonText}>finding a place</Text>
+            <Text style={styles.buttonText}>🔍 finding a place</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, styles.buyHouseButton]}
             onPress={() => setCurrentScreen('buyHouse')}
           >
-            <Text style={styles.buttonText}>buying a house</Text>
+            <Text style={styles.buttonText}>🏠  buying a house</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.button}
+            style={[styles.button, styles.siteSelectButton]}
             onPress={() => setCurrentScreen('siteSelect')}
           >
-            <Text style={styles.buttonText}>site selecting</Text>
+            <Text style={styles.buttonText}>📊   site selecting</Text>
           </TouchableOpacity>
+
+          {/* Horizontal separator line */}
+          <View style={styles.separator} />
+
+          {/* Foursquare Logo below the buttons */}
+          <View style={styles.logoContainer}>
+            <Text style={styles.logoText}>foursquare</Text>
+          </View>
         </View>
+        
+        {/* Remove the old logo container */}
       </View>
     </View>
   );
@@ -142,7 +152,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   contentContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    backgroundColor: 'rgba(255, 255, 255, 0.5)',
     borderRadius: 20,
     padding: 30,
     alignItems: 'center',
@@ -164,13 +174,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   button: {
-    backgroundColor: '#007AFF',
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 12,
     marginVertical: 8,
     minWidth: 200,
     alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -180,10 +190,43 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
     elevation: 3,
   },
+  checkInButton: {
+    backgroundColor: '#FF6B6B',
+  },
+  findPlaceButton: {
+    backgroundColor: '#4ECDC4',
+  },
+  buyHouseButton: {
+    backgroundColor: '#45B7D1',
+  },
+  siteSelectButton: {
+    backgroundColor: '#96CEB4',
+  },
   buttonText: {
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
     textAlign: 'center',
+    justifyContent: 'center',
+    includeFontPadding: false,
+    textAlignVertical: 'center',
+    fontFamily: 'monospace',
+  },
+  logoContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoText: {
+    color: '#333',
+    fontSize: 16,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  separator: {
+    width: '100%',
+    height: 1,
+    backgroundColor: '#ccc',
+    marginVertical: 20,
   },
 });
