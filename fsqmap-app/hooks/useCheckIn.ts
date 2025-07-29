@@ -22,6 +22,7 @@ export const useCheckIn = () => {
     handleSubmit,
     append,
     setInput,
+    isLoading,
   } = useChat({
     fetch: expoFetch as unknown as typeof globalThis.fetch,
     api: 'http://localhost:3000/api/chat',
@@ -115,6 +116,7 @@ export const useCheckIn = () => {
     messages,
     error: error || null,
     input,
+    isLoading,
     
     // Actions
     handleInputChange: handleInputChangeWrapper,

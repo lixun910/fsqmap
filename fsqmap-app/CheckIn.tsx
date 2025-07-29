@@ -14,6 +14,7 @@ export default function CheckIn({ onBack }: CheckInProps) {
     messages,
     error,
     input,
+    isLoading,
     handleInputChange,
     handleSubmitWithLocation,
     stripLocationInfo,
@@ -28,6 +29,7 @@ export default function CheckIn({ onBack }: CheckInProps) {
       messages={messages}
       error={error}
       input={input}
+      isLoading={isLoading}
       handleInputChange={handleInputChange}
       handleSubmitWithLocation={handleSubmitWithLocation}
       stripLocationInfo={stripLocationInfo}

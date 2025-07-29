@@ -10,6 +10,7 @@ import Markdown from 'react-native-markdown-display';
 import { ToolResult } from './ToolResult';
 import { ChatInput } from './ChatInput';
 import { NavigationBar } from './NavigationBar';
+import { TypingIndicator } from './TypingIndicator';
 import { Message } from '../types/Message';
 import { checkInStyles } from '../styles/checkInStyles';
 
@@ -23,6 +24,7 @@ interface CheckInUIProps {
   messages: Message[];
   error: Error | null;
   input: string;
+  isLoading: boolean;
   
   // Actions
   handleInputChange: (text: string) => void;
@@ -43,6 +45,7 @@ export function CheckInUI({
   messages,
   error,
   input,
+  isLoading,
   handleInputChange,
   handleSubmitWithLocation,
   stripLocationInfo,
@@ -143,6 +146,8 @@ export function CheckInUI({
               </View>
             </View>
           ))}
+          
+          {isLoading && <TypingIndicator />}
         </ScrollView>
 
         <View style={checkInStyles.inputContainer}>

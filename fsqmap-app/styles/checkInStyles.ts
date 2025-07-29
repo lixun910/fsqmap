@@ -38,4 +38,36 @@ export const checkInStyles = StyleSheet.create({
     paddingBottom: 10,
     backgroundColor: 'white',
   },
+  typingIndicator: {
+    paddingHorizontal: 8,
+    paddingVertical: 8,
+  },
+  typingBubble: {
+    backgroundColor: '#f0f0f0',
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    maxWidth: '80%',
+  },
+  typingText: {
+    fontSize: 16,
+    color: '#333',
+  },
+  typingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  typingDots: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  typingDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#666',
+  },
 });
