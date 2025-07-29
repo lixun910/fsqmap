@@ -141,18 +141,28 @@ export const useLocation = () => {
     }
   };
 
-  // Check permission on mount
+  // Check permission on mount and get location if permission is granted
   useEffect(() => {
-    const checkPermission = async () => {
+    const checkPermissionAndGetLocation = async () => {
       const { status } = await Location.getForegroundPermissionsAsync();
+      const hasPermission = status === 'granted';
+      
       setLocationState(prev => ({
         ...prev,
-        hasPermission: status === 'granted',
+        hasPermission,
         isLoading: false,
       }));
+
+      // If permission is granted, try to get location
+      if (hasPermission) {
+        console.log('Location permission granted, getting current location...');
+        getCurrentLocation();
+      } else {
+        console.log('Location permission not granted');
+      }
     };
 
-    checkPermission();
+    checkPermissionAndGetLocation();
   }, []);
 
   return {
