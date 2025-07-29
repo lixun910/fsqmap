@@ -17,6 +17,15 @@ export const checkInStyles = StyleSheet.create({
   messageContainer: {
     marginVertical: 8,
   },
+  userMessageContainer: {
+    alignItems: 'flex-end',
+  },
+  userMessageContent: {
+    backgroundColor: '#f0f0f0',
+    padding: 12,
+    borderRadius: 12,
+    maxWidth: '80%',
+  },
   messageRole: {
     fontWeight: '700',
   },

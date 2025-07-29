@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import {
   View,
   ScrollView,
@@ -49,6 +49,45 @@ export function CheckInUI({
   toolAdditionalData,
   onBack,
 }: CheckInUIProps) {
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [userScrolled, setUserScrolled] = useState(false);
+  const [scrollViewHeight, setScrollViewHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
+
+  // Auto-scroll to bottom when new messages are added (unless user manually scrolled)
+  useEffect(() => {
+    if (!userScrolled && scrollViewRef.current && contentHeight > scrollViewHeight) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [messages, userScrolled, contentHeight, scrollViewHeight]);
+
+  // Reset user scroll flag when messages are cleared or significantly changed
+  useEffect(() => {
+    setUserScrolled(false);
+  }, [messages.length]);
+
+  const handleScroll = (event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const isAtBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 20;
+    
+    // If user scrolls away from bottom, mark as user scrolled
+    if (!isAtBottom) {
+      setUserScrolled(true);
+    } else {
+      // If user scrolls back to bottom, allow auto-scroll again
+      setUserScrolled(false);
+    }
+  };
+
+  const handleContentSizeChange = (width: number, height: number) => {
+    setContentHeight(height);
+  };
+
+  const handleLayout = (event: any) => {
+    const { height } = event.nativeEvent.layout;
+    setScrollViewHeight(height);
+  };
+
   if (error) {
     return (
       <SafeAreaView style={checkInStyles.container}>
@@ -65,12 +104,23 @@ export function CheckInUI({
       <NavigationBar title="Check In" onBack={onBack} />
 
       <View style={checkInStyles.mainContainer}>
-        <ScrollView style={checkInStyles.scrollView}>
+        <ScrollView 
+          ref={scrollViewRef}
+          style={checkInStyles.scrollView}
+          onScroll={handleScroll}
+          onContentSizeChange={handleContentSizeChange}
+          onLayout={handleLayout}
+          scrollEventThrottle={16}
+        >
           {messages.map((m) => (
-            <View key={m.id} style={checkInStyles.messageContainer}>
-              <View>
-                <Text style={checkInStyles.messageRole}>{m.role}</Text>
-
+            <View 
+              key={m.id} 
+              style={[
+                checkInStyles.messageContainer,
+                m.role === 'user' && checkInStyles.userMessageContainer
+              ]}
+            >
+              <View style={m.role === 'user' ? checkInStyles.userMessageContent : undefined}>
                 {m.parts?.map((p, index) => {
                   if (p.type === 'text') {
                     // Strip location info from user messages for display
