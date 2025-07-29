@@ -21,7 +21,8 @@
     "react": "19.0.0",
     "react-native": "0.79.5",
     "react-native-markdown-display": "^7.0.2",
-    "react-native-safe-area-context": "^5.5.2"
+    "react-native-safe-area-context": "^5.5.2",
+    "react-native-maps": "1.20.1"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
