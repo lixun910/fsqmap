@@ -11,9 +11,9 @@ import {
   Image,
   Switch,
 } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
-import * as MediaLibrary from 'expo-media-library';
 import { NavigationBar } from './components/NavigationBar';
+import { TikTokAuth } from './components/TikTokAuth';
+import { TikTokContentPost } from './components/TikTokContentPost';
 import { useLocation } from './hooks/useLocation';
 import { GeotaggingCandidateData } from './types/Places';
 
@@ -30,12 +30,6 @@ interface Deal {
   discountedPrice: string;
   discount: string;
   imageUrl: string;
-}
-
-interface MediaFile {
-  uri: string;
-  type: 'photo' | 'video';
-  name: string;
 }
 
 export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
@@ -58,8 +52,8 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
     foursquare: true, // Default to true since this is Foursquare app
   });
 
-  // New state for media upload
-  const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
+  // New state for TikTok integration
+  const [tiktokContentPosted, setTiktokContentPosted] = useState(false);
 
   // Mock deals data - in a real app, this would come from the venue's API
   const mockDeals: Deal[] = [
@@ -102,7 +96,6 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
     }
   }, [toolData]);
 
-
   const handleDealToggle = (dealId: string) => {
     setSelectedDeals((prev) =>
       prev.includes(dealId)
@@ -120,76 +113,9 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
     }));
   };
 
-  const requestMediaPermissions = async () => {
-    const { status: cameraStatus } =
-      await ImagePicker.requestCameraPermissionsAsync();
-    const { status: mediaLibraryStatus } =
-      await MediaLibrary.requestPermissionsAsync();
-
-    if (cameraStatus !== 'granted' || mediaLibraryStatus !== 'granted') {
-      Alert.alert(
-        'Permission Required',
-        'Camera and media library permissions are required to upload photos and videos.',
-        [{ text: 'OK' }]
-      );
-      return false;
-    }
-    return true;
-  };
-
-  const pickImage = async () => {
-    const hasPermission = await requestMediaPermissions();
-    if (!hasPermission) return;
-
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.All,
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const newMediaFile: MediaFile = {
-          uri: asset.uri,
-          type: asset.type === 'video' ? 'video' : 'photo',
-          name: asset.fileName || `media_${Date.now()}`,
-        };
-        setMediaFiles((prev) => [...prev, newMediaFile]);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to pick image. Please try again.');
-    }
-  };
-
-  const takePhoto = async () => {
-    const hasPermission = await requestMediaPermissions();
-    if (!hasPermission) return;
-
-    try {
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets[0]) {
-        const asset = result.assets[0];
-        const newMediaFile: MediaFile = {
-          uri: asset.uri,
-          type: 'photo',
-          name: `photo_${Date.now()}`,
-        };
-        setMediaFiles((prev) => [...prev, newMediaFile]);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to take photo. Please try again.');
-    }
-  };
-
-  const removeMediaFile = (index: number) => {
-    setMediaFiles((prev) => prev.filter((_, i) => i !== index));
+  const handleTikTokContentPosted = (result: any) => {
+    setTiktokContentPosted(true);
+    console.log('TikTok content posted:', result);
   };
 
   const handleSubmit = async () => {
@@ -215,7 +141,7 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
         location,
         selectedDeals,
         socialMediaSettings,
-        mediaFiles,
+        tiktokContentPosted,
       };
 
       console.log('Submitting check-in data:', checkInData);
@@ -239,7 +165,7 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
               twitter: false,
               foursquare: true,
             });
-            setMediaFiles([]);
+            setTiktokContentPosted(false);
             // Navigate back
             onBack?.();
           },
@@ -280,21 +206,6 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
       </View>
     );
   };
-
-  const renderMediaPreview = (media: MediaFile, index: number) => (
-    <View key={index} style={styles.mediaPreviewContainer}>
-      <Image source={{ uri: media.uri }} style={styles.mediaPreview} />
-      <TouchableOpacity
-        style={styles.removeMediaButton}
-        onPress={() => removeMediaFile(index)}
-      >
-        <Text style={styles.removeMediaButtonText}>×</Text>
-      </TouchableOpacity>
-      <Text style={styles.mediaTypeText}>
-        {media.type === 'video' ? '🎥' : '📷'}
-      </Text>
-    </View>
-  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -422,6 +333,24 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
             </ScrollView>
           </View>
 
+          {/* TikTok Integration */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Share to TikTok</Text>
+            <Text style={styles.subLabel}>
+              Connect your TikTok account and share your check-in experience
+            </Text>
+
+            <TikTokAuth
+              onAuthenticated={() => console.log('TikTok authenticated')}
+            />
+
+            <TikTokContentPost
+              venueName={venueName || selectedVenue?.name}
+              venueLocation={selectedVenue?.location?.address}
+              onContentPosted={handleTikTokContentPosted}
+            />
+          </View>
+
           {/* Social Media Publishing */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Share Check-in</Text>
@@ -469,39 +398,6 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
                   }
                 />
               </View>
-            </View>
-          </View>
-
-          {/* Media Upload */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Add Photos/Videos</Text>
-            <Text style={styles.subLabel}>
-              Share your experience with photos or videos
-            </Text>
-
-            {/* Media Preview */}
-            {mediaFiles.length > 0 && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.mediaPreviewScroll}
-              >
-                {mediaFiles.map((media, index) =>
-                  renderMediaPreview(media, index)
-                )}
-              </ScrollView>
-            )}
-
-            {/* Upload Buttons */}
-            <View style={styles.uploadButtonsContainer}>
-              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadButtonText}>
-                  📁 Choose from Library
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.uploadButton} onPress={takePhoto}>
-                <Text style={styles.uploadButtonText}>📷 Take Photo</Text>
-              </TouchableOpacity>
             </View>
           </View>
 
@@ -813,68 +709,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
-  mediaPreviewScroll: {
-    marginBottom: 12,
-  },
   dealsScroll: {
     marginBottom: 12,
   },
   dealsContainer: {
     paddingRight: 16,
-  },
-  mediaPreviewContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  mediaPreview: {
-    width: 80,
-    height: 80,
-    borderRadius: 8,
-  },
-  removeMediaButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#FF6B6B',
-    borderRadius: 12,
-    width: 24,
-    height: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  removeMediaButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  mediaTypeText: {
-    position: 'absolute',
-    bottom: 4,
-    right: 4,
-    fontSize: 12,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    color: 'white',
-    paddingHorizontal: 4,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  uploadButtonsContainer: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  uploadButton: {
-    flex: 1,
-    backgroundColor: '#FAFBFC',
-    borderWidth: 1,
-    borderColor: '#E1E5E9',
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  uploadButtonText: {
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
   },
   locationInfo: {
     backgroundColor: '#F0F8FF',
