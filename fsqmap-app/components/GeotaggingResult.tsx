@@ -61,9 +61,10 @@ interface GeotaggingData {
 
 interface GeotaggingResultProps {
   data: any;
+  onCandidateSelect?: (candidate: GeotaggingCandidate) => void;
 }
 
-export function GeotaggingResult({ data }: GeotaggingResultProps) {
+export function GeotaggingResult({ data, onCandidateSelect }: GeotaggingResultProps) {
   const {
     location: userLocation,
     isLoading: locationLoading,
@@ -82,6 +83,35 @@ export function GeotaggingResult({ data }: GeotaggingResultProps) {
       getCurrentLocation();
     }
   }, [userLocation, locationLoading, locationError]);
+
+  // Auto-select first candidate by default
+  React.useEffect(() => {
+    if (data && data.datasetName) {
+      const datasetName = data.datasetName;
+      const { content: candidates } = data[datasetName];
+      
+      if (candidates && candidates.length > 0 && !selectedCandidateId) {
+        const firstCandidate = candidates[0];
+        setSelectedCandidateId(firstCandidate.id);
+        
+        // Notify parent component about the selection
+        onCandidateSelect?.(firstCandidate);
+        
+        // Animate map to selected candidate
+        if (mapViewRef.current) {
+          mapViewRef.current.animateToRegion(
+            {
+              latitude: firstCandidate.location.latitude,
+              longitude: firstCandidate.location.longitude,
+              latitudeDelta: 0.001,
+              longitudeDelta: 0.001,
+            },
+            1000
+          );
+        }
+      }
+    }
+  }, [data, selectedCandidateId]);
 
   const renderLoadingAnimation = () => {
     return (
@@ -197,20 +227,27 @@ export function GeotaggingResult({ data }: GeotaggingResultProps) {
   const handleCandidatePress = (candidateId: string) => {
     setSelectedCandidateId(candidateId);
 
-    // Animate map to selected candidate
+    // Find the selected candidate
     const selectedCandidate = candidates.find(
       (c: GeotaggingCandidate) => c.id === candidateId
     );
-    if (selectedCandidate && mapViewRef.current) {
-      mapViewRef.current.animateToRegion(
-        {
-          latitude: selectedCandidate.location.latitude,
-          longitude: selectedCandidate.location.longitude,
-          latitudeDelta: 0.001,
-          longitudeDelta: 0.001,
-        },
-        1000
-      );
+    
+    if (selectedCandidate) {
+      // Notify parent component about the selection
+      onCandidateSelect?.(selectedCandidate);
+      
+      // Animate map to selected candidate
+      if (mapViewRef.current) {
+        mapViewRef.current.animateToRegion(
+          {
+            latitude: selectedCandidate.location.latitude,
+            longitude: selectedCandidate.location.longitude,
+            latitudeDelta: 0.001,
+            longitudeDelta: 0.001,
+          },
+          1000
+        );
+      }
     }
   };
 

@@ -24,9 +24,20 @@ export function MessageList({
   hideFirstMessage = false,
   onCheckInPress,
 }: MessageListProps) {
+  // State to track selected candidates for each tool invocation
+  const [selectedCandidates, setSelectedCandidates] = React.useState<Record<string, any>>({});
+
   // Filter out the first message if hideFirstMessage is true
   const displayMessages =
     hideFirstMessage && messages.length > 0 ? messages.slice(1) : messages;
+
+  // Handle candidate selection for a specific tool
+  const handleCandidateSelect = (toolCallId: string, candidate: any) => {
+    setSelectedCandidates(prev => ({
+      ...prev,
+      [toolCallId]: candidate
+    }));
+  };
 
   return (
     <>
@@ -78,6 +89,9 @@ export function MessageList({
                       toolCallId={p.toolInvocation.toolCallId}
                       toolName={p.toolInvocation.toolName}
                       toolData={toolAdditionalData[p.toolInvocation.toolCallId]}
+                      onCandidateSelect={(candidate) => 
+                        handleCandidateSelect(p.toolInvocation.toolCallId, candidate)
+                      }
                     />
                   );
                 }
@@ -85,18 +99,25 @@ export function MessageList({
               {showCheckInButton && (
                 <CheckInButton
                   onPress={() => {
-                    const toolData =
-                      toolAdditionalData[
-                        geotaggingToolInvocation.toolInvocation.toolCallId
-                      ];
-                    if (
-                      toolData &&
-                      typeof toolData === 'object' &&
-                      'datasetName' in toolData
-                    ) {
-                      const datasetName = toolData.datasetName as string;
-                      const data = toolData[datasetName] as any[];
-                      onCheckInPress?.(data);
+                    const toolCallId = geotaggingToolInvocation.toolInvocation.toolCallId;
+                    const selectedCandidate = selectedCandidates[toolCallId];
+                    
+                    if (selectedCandidate) {
+                      // Pass the selected candidate directly
+                      onCheckInPress?.(selectedCandidate);
+                    } else {
+                      // Fallback to first candidate
+                      const toolData =
+                        toolAdditionalData[toolCallId];
+                      if (
+                        toolData &&
+                        typeof toolData === 'object' &&
+                        'datasetName' in toolData
+                      ) {
+                        const datasetName = toolData.datasetName as string;
+                        const candidates = (toolData as Record<string, any>)[datasetName];
+                        onCheckInPress?.(candidates[0]);
+                      }
                     }
                   }}
                 />

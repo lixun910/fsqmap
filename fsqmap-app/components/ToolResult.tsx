@@ -6,12 +6,14 @@ interface ToolResultProps {
   toolCallId: string;
   toolName: string;
   toolData: any;
+  onCandidateSelect?: (candidate: any) => void;
 }
 
 export function ToolResult({
   toolCallId,
   toolName,
   toolData,
+  onCandidateSelect,
 }: ToolResultProps) {
 
   const renderDefaultResult = (data: any) => {
@@ -38,7 +40,7 @@ export function ToolResult({
 
   switch (toolName) {
     case 'geotagging':
-      return <GeotaggingResult data={toolData} />;
+      return <GeotaggingResult data={toolData} onCandidateSelect={onCandidateSelect} />;
 
     default:
       return renderDefaultResult(toolData);

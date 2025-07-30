@@ -44,11 +44,12 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
   const [category, setCategory] = useState('');
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedVenue, setSelectedVenue] = useState<GeotaggingCandidateData | null>(null);
-  
+  const [selectedVenue, setSelectedVenue] =
+    useState<GeotaggingCandidateData | null>(toolData || null);
+
   // New state for deals
   const [selectedDeals, setSelectedDeals] = useState<string[]>([]);
-  
+
   // New state for social media
   const [socialMediaSettings, setSocialMediaSettings] = useState({
     facebook: false,
@@ -56,21 +57,21 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
     twitter: false,
     foursquare: true, // Default to true since this is Foursquare app
   });
-  
+
   // New state for media upload
   const [mediaFiles, setMediaFiles] = useState<MediaFile[]>([]);
-  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
 
   // Mock deals data - in a real app, this would come from the venue's API
   const mockDeals: Deal[] = [
     {
       id: '1',
-      title: "20% Off Appetizers",
+      title: '20% Off Appetizers',
       description: 'Valid on all appetizers from 4-7 PM',
       originalPrice: '$15.99',
       discountedPrice: '$12.79',
       discount: '20% OFF',
-      imageUrl: 'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
+      imageUrl:
+        'https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop',
     },
     {
       id: '2',
@@ -79,7 +80,8 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
       originalPrice: '$12.00',
       discountedPrice: '$6.00',
       discount: '50% OFF',
-      imageUrl: 'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop',
+      imageUrl:
+        'https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=400&h=300&fit=crop',
     },
     {
       id: '3',
@@ -88,24 +90,10 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
       originalPrice: '$18.99',
       discountedPrice: '$18.99',
       discount: 'FREE MIMOSA',
-      imageUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop',
+      imageUrl:
+        'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=300&fit=crop',
     },
   ];
-
-  // Initialize form with toolData if available
-  useEffect(() => {
-    if (toolData && toolData.length > 0) {
-      // Auto-select the first venue if only one is provided
-      if (toolData.length === 1) {
-        const venue = toolData[0];
-        setSelectedVenue(venue);
-        setVenueName(venue.name);
-        if (venue.categories && venue.categories.length > 0) {
-          setCategory(venue.categories[0].name);
-        }
-      }
-    }
-  }, [toolData]);
 
   // Log the toolData to see what's available
   React.useEffect(() => {
@@ -114,33 +102,30 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
     }
   }, [toolData]);
 
-  const handleVenueSelect = (venue: GeotaggingCandidateData) => {
-    setSelectedVenue(venue);
-    setVenueName(venue.name);
-    if (venue.categories && venue.categories.length > 0) {
-      setCategory(venue.categories[0].name);
-    }
-  };
 
   const handleDealToggle = (dealId: string) => {
-    setSelectedDeals(prev => 
-      prev.includes(dealId) 
-        ? prev.filter(id => id !== dealId)
+    setSelectedDeals((prev) =>
+      prev.includes(dealId)
+        ? prev.filter((id) => id !== dealId)
         : [...prev, dealId]
     );
   };
 
-  const handleSocialMediaToggle = (platform: keyof typeof socialMediaSettings) => {
-    setSocialMediaSettings(prev => ({
+  const handleSocialMediaToggle = (
+    platform: keyof typeof socialMediaSettings
+  ) => {
+    setSocialMediaSettings((prev) => ({
       ...prev,
-      [platform]: !prev[platform]
+      [platform]: !prev[platform],
     }));
   };
 
   const requestMediaPermissions = async () => {
-    const { status: cameraStatus } = await ImagePicker.requestCameraPermissionsAsync();
-    const { status: mediaLibraryStatus } = await MediaLibrary.requestPermissionsAsync();
-    
+    const { status: cameraStatus } =
+      await ImagePicker.requestCameraPermissionsAsync();
+    const { status: mediaLibraryStatus } =
+      await MediaLibrary.requestPermissionsAsync();
+
     if (cameraStatus !== 'granted' || mediaLibraryStatus !== 'granted') {
       Alert.alert(
         'Permission Required',
@@ -171,7 +156,7 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
           type: asset.type === 'video' ? 'video' : 'photo',
           name: asset.fileName || `media_${Date.now()}`,
         };
-        setMediaFiles(prev => [...prev, newMediaFile]);
+        setMediaFiles((prev) => [...prev, newMediaFile]);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to pick image. Please try again.');
@@ -196,7 +181,7 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
           type: 'photo',
           name: `photo_${Date.now()}`,
         };
-        setMediaFiles(prev => [...prev, newMediaFile]);
+        setMediaFiles((prev) => [...prev, newMediaFile]);
       }
     } catch (error) {
       Alert.alert('Error', 'Failed to take photo. Please try again.');
@@ -204,7 +189,7 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
   };
 
   const removeMediaFile = (index: number) => {
-    setMediaFiles(prev => prev.filter((_, i) => i !== index));
+    setMediaFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -232,38 +217,34 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
         socialMediaSettings,
         mediaFiles,
       };
-      
+
       console.log('Submitting check-in data:', checkInData);
-      
+
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      Alert.alert(
-        'Success!',
-        `Successfully checked in at ${venueName}`,
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              // Reset form
-              setVenueName('');
-              setCategory('');
-              setNotes('');
-              setSelectedVenue(null);
-              setSelectedDeals([]);
-              setSocialMediaSettings({
-                facebook: false,
-                instagram: false,
-                twitter: false,
-                foursquare: true,
-              });
-              setMediaFiles([]);
-              // Navigate back
-              onBack?.();
-            }
-          }
-        ]
-      );
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      Alert.alert('Success!', `Successfully checked in at ${venueName}`, [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Reset form
+            setVenueName('');
+            setCategory('');
+            setNotes('');
+            setSelectedVenue(null);
+            setSelectedDeals([]);
+            setSocialMediaSettings({
+              facebook: false,
+              instagram: false,
+              twitter: false,
+              foursquare: true,
+            });
+            setMediaFiles([]);
+            // Navigate back
+            onBack?.();
+          },
+        },
+      ]);
     } catch (error) {
       Alert.alert('Error', 'Failed to check in. Please try again.');
     } finally {
@@ -271,86 +252,31 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
     }
   };
 
-  const categories = [
-    'Restaurant',
-    'Cafe',
-    'Bar',
-    'Shopping',
-    'Entertainment',
-    'Fitness',
-    'Transport',
-    'Other'
-  ];
-
-  const renderVenueCard = (venue: GeotaggingCandidateData, index: number) => {
-    const isSelected = selectedVenue?.id === venue.id;
-    
-    return (
-      <TouchableOpacity
-        key={venue.id}
-        style={[styles.venueCard, isSelected && styles.venueCardSelected]}
-        onPress={() => handleVenueSelect(venue)}
-      >
-        <View style={styles.venueHeader}>
-          <Text style={[styles.venueName, isSelected && styles.venueNameSelected]}>
-            {venue.name}
-          </Text>
-          {venue.rating && (
-            <View style={styles.ratingContainer}>
-              <Text style={styles.ratingText}>⭐ {venue.rating}</Text>
-            </View>
-          )}
-        </View>
-        
-        {venue.categories && venue.categories.length > 0 && (
-          <Text style={styles.venueCategory}>
-            {venue.categories.map(cat => cat.name).join(', ')}
-          </Text>
-        )}
-        
-        {venue.location.address && (
-          <Text style={styles.venueAddress}>
-            📍 {venue.location.address}
-          </Text>
-        )}
-        
-        {venue.distance && (
-          <Text style={styles.venueDistance}>
-            📏 {venue.distance.toFixed(0)}m away
-          </Text>
-        )}
-        
-        {venue.price && (
-          <Text style={styles.venuePrice}>
-            💰 {Array(venue.price).fill('$').join('')}
-          </Text>
-        )}
-      </TouchableOpacity>
-    );
-  };
-
   const renderDealCard = (deal: Deal) => {
     const isSelected = selectedDeals.includes(deal.id);
-    
+
     return (
-      <View key={deal.id} style={[styles.dealCard, isSelected && styles.dealCardSelected]}>
-        <View style={styles.dealHeader}>
-          <Image source={{ uri: deal.imageUrl }} style={styles.dealImage} />
-          <View style={styles.dealInfo}>
-            <Text style={styles.dealTitle}>{deal.title}</Text>
-            <Text style={styles.dealDescription}>{deal.description}</Text>
-            <View style={styles.dealPriceContainer}>
-              <Text style={styles.dealOriginalPrice}>{deal.originalPrice}</Text>
-              <Text style={styles.dealDiscountedPrice}>{deal.discountedPrice}</Text>
-            </View>
+      <View
+        key={deal.id}
+        style={[styles.dealCard, isSelected && styles.dealCardSelected]}
+      >
+        <Image source={{ uri: deal.imageUrl }} style={styles.dealImage} />
+        <View style={styles.dealInfo}>
+          <Text style={styles.dealTitle}>{deal.title}</Text>
+          <Text style={styles.dealDescription}>{deal.description}</Text>
+          <View style={styles.dealPriceContainer}>
+            <Text style={styles.dealOriginalPrice}>{deal.originalPrice}</Text>
+            <Text style={styles.dealDiscountedPrice}>
+              {deal.discountedPrice}
+            </Text>
           </View>
-          <Switch
-            value={isSelected}
-            onValueChange={() => handleDealToggle(deal.id)}
-            trackColor={{ false: '#E1E5E9', true: '#FF6B6B' }}
-            thumbColor={isSelected ? '#fff' : '#f4f3f4'}
-          />
         </View>
+        <Switch
+          value={isSelected}
+          onValueChange={() => handleDealToggle(deal.id)}
+          trackColor={{ false: '#E1E5E9', true: '#FF6B6B' }}
+          thumbColor={isSelected ? '#fff' : '#f4f3f4'}
+        />
       </View>
     );
   };
@@ -373,8 +299,11 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
   return (
     <SafeAreaView style={styles.container}>
       <NavigationBar title="Check In Form" onBack={onBack} />
-      
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.content}>
+
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.content}
+      >
         <View style={styles.header}>
           <Text style={styles.title}>Check In</Text>
           <Text style={styles.subtitle}>
@@ -383,100 +312,63 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
         </View>
 
         <View style={styles.form}>
-          {/* Venue Selection */}
-          {toolData && toolData.length > 1 && (
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Select Venue</Text>
-              <Text style={styles.subLabel}>
-                {toolData.length} venues found nearby
-              </Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.venueScroll}>
-                {toolData.map((venue, index) => renderVenueCard(venue, index))}
-              </ScrollView>
-            </View>
-          )}
-
-          {/* Venue Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Venue Name *</Text>
-            <TextInput
-              style={styles.textInput}
-              value={venueName}
-              onChangeText={setVenueName}
-              placeholder="Enter venue name"
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          {/* Category */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Category</Text>
-            <View style={styles.categoryContainer}>
-              {categories.map((cat) => (
-                <TouchableOpacity
-                  key={cat}
-                  style={[
-                    styles.categoryButton,
-                    category === cat && styles.categoryButtonSelected
-                  ]}
-                  onPress={() => setCategory(cat)}
-                >
-                  <Text style={[
-                    styles.categoryButtonText,
-                    category === cat && styles.categoryButtonTextSelected
-                  ]}>
-                    {cat}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
           {/* Enhanced Venue Details */}
           {selectedVenue && (
             <View style={styles.venueDetails}>
               <Text style={styles.venueDetailsLabel}>📍 Venue Details</Text>
-              
+
               <View style={styles.venueDetailRow}>
                 <Text style={styles.venueDetailLabel}>Name:</Text>
-                <Text style={styles.venueDetailValue}>{selectedVenue.name}</Text>
+                <Text style={styles.venueDetailValue}>
+                  {selectedVenue.name}
+                </Text>
               </View>
-              
-              {selectedVenue.location.address && (
+
+              {selectedVenue.location?.address && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Address:</Text>
-                  <Text style={styles.venueDetailValue}>{selectedVenue.location.address}</Text>
+                  <Text style={styles.venueDetailValue}>
+                    {selectedVenue.location.address}
+                  </Text>
                 </View>
               )}
-              
+
               {selectedVenue.phone && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Phone:</Text>
-                  <Text style={styles.venueDetailValue}>{selectedVenue.phone}</Text>
+                  <Text style={styles.venueDetailValue}>
+                    {selectedVenue.phone}
+                  </Text>
                 </View>
               )}
-              
+
               {selectedVenue.website && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Website:</Text>
-                  <Text style={styles.venueDetailValue}>{selectedVenue.website}</Text>
+                  <Text style={styles.venueDetailValue}>
+                    {selectedVenue.website}
+                  </Text>
                 </View>
               )}
-              
+
               {selectedVenue.hours?.display && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Hours:</Text>
-                  <Text style={styles.venueDetailValue}>{selectedVenue.hours.display}</Text>
+                  <Text style={styles.venueDetailValue}>
+                    {selectedVenue.hours.display}
+                  </Text>
                 </View>
               )}
-              
+
               {selectedVenue.rating && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Rating:</Text>
-                  <Text style={styles.venueDetailValue}>⭐ {selectedVenue.rating}</Text>
+                  <Text style={styles.venueDetailValue}>
+                    ⭐ {selectedVenue.rating}
+                  </Text>
                 </View>
               )}
-              
+
               {selectedVenue.price && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Price:</Text>
@@ -485,14 +377,16 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
                   </Text>
                 </View>
               )}
-              
+
               {selectedVenue.description && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Description:</Text>
-                  <Text style={styles.venueDetailValue}>{selectedVenue.description}</Text>
+                  <Text style={styles.venueDetailValue}>
+                    {selectedVenue.description}
+                  </Text>
                 </View>
               )}
-              
+
               {selectedVenue.socialMedia && (
                 <View style={styles.venueDetailRow}>
                   <Text style={styles.venueDetailLabel}>Social Media:</Text>
@@ -518,7 +412,14 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
             <Text style={styles.subLabel}>
               Select deals you'd like to use with this check-in
             </Text>
-            {mockDeals.map(renderDealCard)}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.dealsScroll}
+              contentContainerStyle={styles.dealsContainer}
+            >
+              {mockDeals.map(renderDealCard)}
+            </ScrollView>
           </View>
 
           {/* Social Media Publishing */}
@@ -543,7 +444,9 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
                   value={socialMediaSettings.instagram}
                   onValueChange={() => handleSocialMediaToggle('instagram')}
                   trackColor={{ false: '#E1E5E9', true: '#E4405F' }}
-                  thumbColor={socialMediaSettings.instagram ? '#fff' : '#f4f3f4'}
+                  thumbColor={
+                    socialMediaSettings.instagram ? '#fff' : '#f4f3f4'
+                  }
                 />
               </View>
               <View style={styles.socialMediaRow}>
@@ -561,7 +464,9 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
                   value={socialMediaSettings.foursquare}
                   onValueChange={() => handleSocialMediaToggle('foursquare')}
                   trackColor={{ false: '#E1E5E9', true: '#FF6B6B' }}
-                  thumbColor={socialMediaSettings.foursquare ? '#fff' : '#f4f3f4'}
+                  thumbColor={
+                    socialMediaSettings.foursquare ? '#fff' : '#f4f3f4'
+                  }
                 />
               </View>
             </View>
@@ -573,18 +478,26 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
             <Text style={styles.subLabel}>
               Share your experience with photos or videos
             </Text>
-            
+
             {/* Media Preview */}
             {mediaFiles.length > 0 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.mediaPreviewScroll}>
-                {mediaFiles.map((media, index) => renderMediaPreview(media, index))}
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.mediaPreviewScroll}
+              >
+                {mediaFiles.map((media, index) =>
+                  renderMediaPreview(media, index)
+                )}
               </ScrollView>
             )}
-            
+
             {/* Upload Buttons */}
             <View style={styles.uploadButtonsContainer}>
               <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadButtonText}>📁 Choose from Library</Text>
+                <Text style={styles.uploadButtonText}>
+                  📁 Choose from Library
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.uploadButton} onPress={takePhoto}>
                 <Text style={styles.uploadButtonText}>📷 Take Photo</Text>
@@ -621,15 +534,19 @@ export default function CheckInForm({ onBack, toolData }: CheckInFormProps) {
           <TouchableOpacity
             style={[
               styles.submitButton,
-              (!venueName.trim() || isSubmitting) && styles.submitButtonDisabled
+              (!venueName.trim() || isSubmitting) &&
+                styles.submitButtonDisabled,
             ]}
             onPress={handleSubmit}
             disabled={!venueName.trim() || isSubmitting}
           >
-            <Text style={[
-              styles.submitButtonText,
-              (!venueName.trim() || isSubmitting) && styles.submitButtonTextDisabled
-            ]}>
+            <Text
+              style={[
+                styles.submitButtonText,
+                (!venueName.trim() || isSubmitting) &&
+                  styles.submitButtonTextDisabled,
+              ]}
+            >
               {isSubmitting ? 'Checking In...' : 'Check In'}
             </Text>
           </TouchableOpacity>
@@ -834,39 +751,41 @@ const styles = StyleSheet.create({
     borderColor: '#E1E5E9',
     borderRadius: 8,
     padding: 12,
-    marginBottom: 8,
+    marginRight: 12,
+    width: 200,
+    alignItems: 'center',
   },
   dealCardSelected: {
     backgroundColor: '#FFF3CD',
     borderColor: '#FF6B6B',
   },
-  dealHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
   dealImage: {
-    width: 60,
-    height: 60,
+    width: 80,
+    height: 80,
     borderRadius: 8,
-    marginRight: 12,
+    marginBottom: 8,
   },
   dealInfo: {
-    flex: 1,
+    width: '100%',
+    marginBottom: 8,
   },
   dealTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     color: '#333',
     marginBottom: 4,
+    textAlign: 'center',
   },
   dealDescription: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#666',
     marginBottom: 4,
+    textAlign: 'center',
   },
   dealPriceContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
   dealOriginalPrice: {
     fontSize: 14,
@@ -896,6 +815,12 @@ const styles = StyleSheet.create({
   },
   mediaPreviewScroll: {
     marginBottom: 12,
+  },
+  dealsScroll: {
+    marginBottom: 12,
+  },
+  dealsContainer: {
+    paddingRight: 16,
   },
   mediaPreviewContainer: {
     position: 'relative',
@@ -995,4 +920,4 @@ const styles = StyleSheet.create({
   submitButtonTextDisabled: {
     color: '#9E9E9E',
   },
-}); 
+});
