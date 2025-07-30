@@ -16,7 +16,9 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app needs access to location to provide location-based services.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to provide location-based services."
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "This app needs access to location to provide location-based services.",
+        "NSCameraUsageDescription": "This app needs access to camera to take photos for check-ins.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to photo library to select photos for check-ins."
       }
     },
     "android": {
@@ -27,7 +29,10 @@
       "edgeToEdgeEnabled": true,
       "permissions": [
         "ACCESS_FINE_LOCATION",
-        "ACCESS_COARSE_LOCATION"
+        "ACCESS_COARSE_LOCATION",
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {

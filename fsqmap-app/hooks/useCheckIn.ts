@@ -13,6 +13,7 @@ export const useCheckIn = () => {
 
   // preserve the tool data between renders
   const toolAdditionalData = useRef<Record<string, unknown>>({});
+  const hasAutoSent = useRef(false);
 
   const {
     messages,
@@ -53,10 +54,51 @@ export const useCheckIn = () => {
     getCurrentLocation();
   }, []);
 
-  // Set default input value to "check in"
+  // Reset auto-send flag when messages are cleared
   useEffect(() => {
-    setInput('check in');
-  }, []);
+    if (messages.length === 0) {
+      hasAutoSent.current = false;
+    }
+  }, [messages.length]);
+
+  // Auto-send "Hi" when component loads and messages are empty
+  useEffect(() => {
+    // Only auto-send if we haven't sent yet and conditions are met
+    if (messages.length === 0 && !isLoading && !locationLoading && !hasAutoSent.current) {
+      hasAutoSent.current = true;
+      setInput('Hi');
+      
+      // Try sending immediately first
+      let finalValue = 'Hi';
+
+      // Append location information if available
+      if (location) {
+        let locationInfo = ` [Location: ${location.latitude}, ${location.longitude}`;
+
+        // Add altitude if available
+        if (location.altitude !== undefined) {
+          locationInfo += `, Altitude: ${location.altitude}`;
+        }
+
+        // Add accuracy if available
+        if (location.accuracy !== undefined) {
+          locationInfo += `, Accuracy: ${location.accuracy}`;
+        }
+
+        locationInfo += ']';
+        finalValue = 'Hi' + locationInfo;
+      }
+
+      // Use the append method to send the message with location
+      append({
+        role: 'user',
+        content: finalValue,
+      });
+
+      // clear the input
+      setInput('Check in');
+    }
+  }, [messages.length, isLoading, locationLoading, location, append]);
 
   // Helper function to strip location information from message content for display
   const stripLocationInfo = (content: string): string => {

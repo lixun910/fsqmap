@@ -10,30 +10,70 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import { useLocation } from './hooks/useLocation';
 import CheckIn from './CheckIn';
+import CheckInForm from './CheckInForm';
 import FindPlace from './FindPlace';
 import BuyHouse from './BuyHouse';
 import SiteSelect from './SiteSelect';
 
 const { width, height } = Dimensions.get('window');
 
-type Screen = 'main' | 'checkIn' | 'findPlace' | 'buyHouse' | 'siteSelect';
+type Screen = 'main' | 'checkIn' | 'checkInForm' | 'findPlace' | 'buyHouse' | 'siteSelect';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('main');
+  const [checkInToolData, setCheckInToolData] = useState<any>(null);
   const {
     location,
     isLoading: locationLoading,
     errorMsg: locationError,
     getCurrentLocation,
+    startLocationUpdates,
   } = useLocation();
 
-  // Get location when component mounts
+  // Start continuous location updates when component mounts
   React.useEffect(() => {
-    getCurrentLocation();
+    let locationSubscription: any = null;
+
+    const initializeLocation = async () => {
+      // First get initial location
+      await getCurrentLocation();
+      
+      // Then start continuous updates
+      locationSubscription = await startLocationUpdates();
+    };
+
+    initializeLocation();
+
+    // Cleanup subscription when component unmounts
+    return () => {
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
   }, []);
 
   const renderMainScreen = () => (
     <View style={styles.container}>
+      {/* Loading indicator */}
+      {locationLoading && (
+        <View style={styles.loadingOverlay}>
+          <Text style={styles.loadingText}>Getting your location...</Text>
+        </View>
+      )}
+      
+      {/* Error message */}
+      {locationError && (
+        <View style={styles.errorOverlay}>
+          <Text style={styles.errorText}>{locationError}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={getCurrentLocation}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Map Background */}
       <MapView
         style={styles.map}
@@ -43,6 +83,12 @@ export default function App() {
           latitudeDelta: 0.001, // Smaller delta for better centering
           longitudeDelta: 0.001, // Smaller delta for better centering
         }}
+        region={location ? {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.001,
+          longitudeDelta: 0.001,
+        } : undefined}
         showsUserLocation={true}
         scrollEnabled={false}
         zoomEnabled={false}
@@ -64,7 +110,7 @@ export default function App() {
       {/* Overlay with buttons */}
       <View style={styles.overlay}>
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>I'm</Text>
+          <Text style={styles.title}>I'm George</Text>
           
           <TouchableOpacity
             style={[styles.button, styles.checkInButton]}
@@ -77,21 +123,21 @@ export default function App() {
             style={[styles.button, styles.findPlaceButton]}
             onPress={() => setCurrentScreen('findPlace')}
           >
-            <Text style={styles.buttonText}>🔍 finding a place</Text>
+            <Text style={styles.buttonText}>🔍 finding place</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, styles.buyHouseButton]}
             onPress={() => setCurrentScreen('buyHouse')}
           >
-            <Text style={styles.buttonText}>🏠  buying a house</Text>
+            <Text style={styles.buttonText}>🏠  buying house</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={[styles.button, styles.siteSelectButton]}
             onPress={() => setCurrentScreen('siteSelect')}
           >
-            <Text style={styles.buttonText}>📊   site selecting</Text>
+            <Text style={styles.buttonText}>📊   selecting site</Text>
           </TouchableOpacity>
 
           {/* Horizontal separator line */}
@@ -111,7 +157,18 @@ export default function App() {
   const renderScreen = () => {
     switch (currentScreen) {
       case 'checkIn':
-        return <CheckIn onBack={() => setCurrentScreen('main')} />;
+        return <CheckIn 
+          onBack={() => setCurrentScreen('main')} 
+          onNavigateToForm={(toolData: any) => {
+            setCheckInToolData(toolData);
+            setCurrentScreen('checkInForm');
+          }}
+        />;
+      case 'checkInForm':
+        return <CheckInForm 
+          onBack={() => setCurrentScreen('checkIn')} 
+          toolData={checkInToolData}
+        />;
       case 'findPlace':
         return <FindPlace onBack={() => setCurrentScreen('main')} />;
       case 'buyHouse':
@@ -228,5 +285,52 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: '#ccc',
     marginVertical: 20,
+  },
+  loadingOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  loadingText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  errorOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(255, 0, 0, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  errorText: {
+    color: '#d32f2f',
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 20,
+  },
+  retryButton: {
+    backgroundColor: '#d32f2f',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

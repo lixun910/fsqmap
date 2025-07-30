@@ -4,9 +4,10 @@ import { CheckInUI } from './components/CheckInUI';
 
 interface CheckInProps {
   onBack?: () => void;
+  onNavigateToForm?: (toolData?: any) => void;
 }
 
-export default function CheckIn({ onBack }: CheckInProps) {
+export default function CheckIn({ onBack, onNavigateToForm }: CheckInProps) {
   const {
     location,
     locationLoading,
@@ -35,6 +36,7 @@ export default function CheckIn({ onBack }: CheckInProps) {
       stripLocationInfo={stripLocationInfo}
       toolAdditionalData={toolAdditionalData}
       onBack={onBack}
+      onNavigateToForm={onNavigateToForm}
     />
   );
 }

@@ -58,6 +58,29 @@ export const useLocation = () => {
     try {
       setLocationState(prev => ({ ...prev, isLoading: true, errorMsg: null }));
 
+      // TESTING MODE: Return fixed coordinates for testing
+      const testLocationData: LocationData = {
+        latitude: 33.244265313491326,
+        longitude: -111.86665736215393,
+        accuracy: 5,
+        altitude: 400,
+        heading: 0,
+        speed: 0,
+        timestamp: Date.now(),
+      };
+
+      setLocationState(prev => ({
+        ...prev,
+        location: testLocationData,
+        isLoading: false,
+        hasPermission: true,
+      }));
+
+      console.log('TESTING MODE: Returning fixed coordinates:', testLocationData);
+      return testLocationData;
+
+      // Original code commented out for testing
+      /*
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         return null;
@@ -86,6 +109,7 @@ export const useLocation = () => {
       }));
 
       return locationData;
+      */
     } catch (error) {
       setLocationState(prev => ({
         ...prev,
@@ -100,6 +124,35 @@ export const useLocation = () => {
     try {
       setLocationState(prev => ({ ...prev, isLoading: true, errorMsg: null }));
 
+      // TESTING MODE: Return fixed coordinates for testing
+      const testLocationData: LocationData = {
+        latitude: 33.244265313491326,
+        longitude: -111.86665736215393,
+        accuracy: 5,
+        altitude: 400,
+        heading: 0,
+        speed: 0,
+        timestamp: Date.now(),
+      };
+
+      setLocationState(prev => ({
+        ...prev,
+        location: testLocationData,
+        isLoading: false,
+        hasPermission: true,
+      }));
+
+      console.log('TESTING MODE: Returning fixed coordinates for location updates:', testLocationData);
+      
+      // Return a mock subscription object for testing
+      return {
+        remove: () => {
+          console.log('TESTING MODE: Mock location subscription removed');
+        }
+      };
+
+      // Original code commented out for testing
+      /*
       const hasPermission = await requestLocationPermission();
       if (!hasPermission) {
         return null;
@@ -131,6 +184,7 @@ export const useLocation = () => {
       );
 
       return locationSubscription;
+      */
     } catch (error) {
       setLocationState(prev => ({
         ...prev,
