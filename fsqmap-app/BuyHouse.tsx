@@ -1,24 +1,40 @@
 import React from 'react';
-import { View, Text, SafeAreaView } from 'react-native';
-import { NavigationBar } from './components/NavigationBar';
-import { commonStyles } from './styles/commonStyles';
+import { useLocationChat } from './hooks/useChat';
+import { BuyHouseUI } from './components/BuyHouseUI';
 
 interface BuyHouseProps {
   onBack?: () => void;
 }
 
 export default function BuyHouse({ onBack }: BuyHouseProps) {
+  const {
+    location,
+    locationLoading,
+    locationError,
+    messages,
+    error,
+    input,
+    isLoading,
+    handleInputChange,
+    handleSubmitWithLocation,
+    stripLocationInfo,
+    toolAdditionalData,
+  } = useLocationChat({ autoSendMessage: 'Help me find a house to buy' });
+
   return (
-    <SafeAreaView style={commonStyles.container}>
-      <NavigationBar title="Buy House" onBack={onBack} />
-      <View style={commonStyles.centeredContainer}>
-        <Text style={commonStyles.title}>
-          Buy House
-        </Text>
-        <Text style={commonStyles.description}>
-          This is the Buy House screen. Implementation coming soon.
-        </Text>
-      </View>
-    </SafeAreaView>
+    <BuyHouseUI
+      location={location}
+      locationLoading={locationLoading}
+      locationError={locationError}
+      messages={messages}
+      error={error}
+      input={input}
+      isLoading={isLoading}
+      handleInputChange={handleInputChange}
+      handleSubmitWithLocation={handleSubmitWithLocation}
+      stripLocationInfo={stripLocationInfo}
+      toolAdditionalData={toolAdditionalData}
+      onBack={onBack}
+    />
   );
 }

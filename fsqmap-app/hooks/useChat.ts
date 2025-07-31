@@ -3,7 +3,54 @@ import { useChat } from '@ai-sdk/react';
 import { fetch as expoFetch } from 'expo/fetch';
 import { useLocation } from './useLocation';
 
-export const useCheckIn = () => {
+interface UseChatOptions {
+  /** Optional message to automatically send when the component mounts */
+  autoSendMessage?: string;
+  /** Placeholder text for the input field */
+  placeholder?: string;
+  /** API endpoint for the chat service */
+  api?: string;
+  /** Custom error handler */
+  onError?: (error: Error) => void;
+}
+
+/**
+ * Unified chat hook that combines location-aware messaging with AI chat functionality.
+ * 
+ * This hook automatically handles:
+ * - Location detection and formatting
+ * - Auto-sending initial messages
+ * - Tool data preservation
+ * - Input management with placeholders
+ * 
+ * @param options - Configuration options for the chat hook
+ * @returns Object containing chat state, location data, and utility functions
+ * 
+ * @example
+ * // Basic usage with auto-send
+ * const chat = useLocationChat({ autoSendMessage: 'Hi' });
+ * 
+ * @example
+ * // Custom configuration
+ * const chat = useLocationChat({
+ *   autoSendMessage: 'Help me find a house',
+ *   placeholder: 'Ask about houses...',
+ *   api: 'https://my-api.com/chat'
+ * });
+ * 
+ * @example
+ * // Manual message sending
+ * const chat = useLocationChat();
+ * chat.sendMessage('Hello world');
+ */
+export const useLocationChat = (options: UseChatOptions = {}) => {
+  const {
+    autoSendMessage,
+    placeholder = '',
+    api = 'http://localhost:3000/api/chat',
+    onError = (error) => console.error(error, 'ERROR'),
+  } = options;
+
   const {
     location,
     isLoading: locationLoading,
@@ -26,8 +73,8 @@ export const useCheckIn = () => {
     isLoading,
   } = useChat({
     fetch: expoFetch as unknown as typeof globalThis.fetch,
-    api: 'http://localhost:3000/api/chat',
-    onError: (error) => console.error(error, 'ERROR'),
+    api,
+    onError,
     onFinish: (message) => {
       // save the message.annotations from server-side tools for rendering tools
       message.annotations?.forEach((annotation) => {
@@ -61,15 +108,15 @@ export const useCheckIn = () => {
     }
   }, [messages.length]);
 
-  // Auto-send "Hi" when component loads and messages are empty
+  // Auto-send message when component loads and messages are empty
   useEffect(() => {
     // Only auto-send if we haven't sent yet and conditions are met
-    if (messages.length === 0 && !isLoading && !locationLoading && !hasAutoSent.current) {
+    if (messages.length === 0 && !isLoading && !locationLoading && !hasAutoSent.current && autoSendMessage) {
       hasAutoSent.current = true;
-      setInput('Hi');
+      setInput(placeholder);
       
       // Try sending immediately first
-      let finalValue = 'Hi';
+      let finalValue = autoSendMessage;
 
       // Append location information if available
       if (location) {
@@ -86,7 +133,7 @@ export const useCheckIn = () => {
         }
 
         locationInfo += ']';
-        finalValue = 'Hi' + locationInfo;
+        finalValue = autoSendMessage + locationInfo;
       }
 
       // Use the append method to send the message with location
@@ -96,14 +143,34 @@ export const useCheckIn = () => {
       });
 
       // clear the input
-      setInput('Check in');
+      setInput(placeholder);
     }
-  }, [messages.length, isLoading, locationLoading, location, append]);
+  }, [messages.length, isLoading, locationLoading, location, append, autoSendMessage, placeholder]);
 
   // Helper function to strip location information from message content for display
   const stripLocationInfo = (content: string): string => {
     // Remove location information that matches the pattern [Location: ...]
     return content.replace(/\s*\[Location:[^\]]*\]\s*/, '');
+  };
+
+  // Helper function to format location information
+  const formatLocationInfo = (): string => {
+    if (!location) return '';
+    
+    let locationInfo = ` [Location: ${location.latitude}, ${location.longitude}`;
+
+    // Add altitude if available
+    if (location.altitude !== undefined) {
+      locationInfo += `, Altitude: ${location.altitude}`;
+    }
+
+    // Add accuracy if available
+    if (location.accuracy !== undefined) {
+      locationInfo += `, Accuracy: ${location.accuracy}`;
+    }
+
+    locationInfo += ']';
+    return locationInfo;
   };
 
   // Custom handleSubmit that appends location to the message before sending
@@ -117,20 +184,7 @@ export const useCheckIn = () => {
 
     // Append location information if available
     if (location && input && input.trim()) {
-      let locationInfo = ` [Location: ${location.latitude}, ${location.longitude}`;
-
-      // Add altitude if available
-      if (location.altitude !== undefined) {
-        locationInfo += `, Altitude: ${location.altitude}`;
-      }
-
-      // Add accuracy if available
-      if (location.accuracy !== undefined) {
-        locationInfo += `, Accuracy: ${location.accuracy}`;
-      }
-
-      locationInfo += ']';
-      finalValue = input + locationInfo;
+      finalValue = input + formatLocationInfo();
     }
 
     // Use the append method to send the message with location
@@ -140,12 +194,21 @@ export const useCheckIn = () => {
     });
 
     // Clear the input
-    setInput('');
+    setInput(placeholder);
   };
 
   // Wrapper for handleInputChange to match the expected signature
   const handleInputChangeWrapper = (text: string) => {
     handleInputChange({ target: { value: text } } as any);
+  };
+
+  // Function to manually send a message with location
+  const sendMessage = (message: string) => {
+    const finalValue = message + formatLocationInfo();
+    append({
+      role: 'user',
+      content: finalValue,
+    });
   };
 
   return {
@@ -164,9 +227,11 @@ export const useCheckIn = () => {
     handleInputChange: handleInputChangeWrapper,
     handleSubmitWithLocation,
     setInput,
+    sendMessage,
     
     // Utility functions
     stripLocationInfo,
+    formatLocationInfo,
     toolAdditionalData: toolAdditionalData.current,
   };
-};
+}; 

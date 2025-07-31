@@ -16,6 +16,7 @@ export const checkInStyles = StyleSheet.create({
   },
   messageContainer: {
     marginVertical: 8,
+    marginHorizontal: 8,
   },
   userMessageContainer: {
     alignItems: 'flex-end',

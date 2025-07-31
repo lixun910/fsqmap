@@ -1,5 +1,5 @@
 import React from 'react';
-import { useCheckIn } from './hooks/useCheckIn';
+import { useLocationChat } from './hooks/useChat';
 import { CheckInUI } from './components/CheckInUI';
 
 interface CheckInProps {
@@ -20,7 +20,7 @@ export default function CheckIn({ onBack, onNavigateToForm }: CheckInProps) {
     handleSubmitWithLocation,
     stripLocationInfo,
     toolAdditionalData,
-  } = useCheckIn();
+  } = useLocationChat({ autoSendMessage: 'Hi' });
 
   return (
     <CheckInUI
