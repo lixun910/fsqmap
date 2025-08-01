@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text } from 'react-native';
 import { GeotaggingResult } from './GeotaggingResult';
+import { PlacesResult } from './PlacesResult';
 
 interface ToolResultProps {
   toolCallId: string;
@@ -40,7 +41,17 @@ export function ToolResult({
 
   switch (toolName) {
     case 'geotagging':
-      return <GeotaggingResult data={toolData} onCandidateSelect={onCandidateSelect} />;
+      return (
+        <GeotaggingResult
+          data={toolData}
+          onCandidateSelect={onCandidateSelect}
+        />
+      );
+
+    case 'placeSearch':
+      return (
+        <PlacesResult data={toolData} />
+      );
 
     default:
       return renderDefaultResult(toolData);

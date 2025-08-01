@@ -32,37 +32,86 @@ const placeCategories: PlaceCategory[] = [
     id: 'restaurants',
     title: 'Restaurants',
     icon: '🍽️',
-    subcategories: ['Mexican', 'Italian', 'Chinese', 'Japanese', 'Indian', 'Thai', 'American', 'Pizza', 'Burgers', 'Sushi'],
+    subcategories: [
+      'Mexican',
+      'Italian',
+      'Chinese',
+      'Japanese',
+      'Indian',
+      'Thai',
+      'American',
+      'Pizza',
+      'Burgers',
+      'Sushi',
+    ],
   },
   {
     id: 'healthcare',
     title: 'Healthcare',
     icon: '🏥',
-    subcategories: ['Dentist', 'Hospital', 'Pharmacy', 'Clinic', 'Urgent Care', 'Optometrist', 'Dermatologist'],
+    subcategories: [
+      'Dentist',
+      'Hospital',
+      'Pharmacy',
+      'Clinic',
+      'Urgent Care',
+      'Optometrist',
+      'Dermatologist',
+    ],
   },
   {
     id: 'services',
     title: 'Services',
     icon: '🔧',
-    subcategories: ['Gas Station', 'Car Wash', 'Auto Repair', 'Bank', 'ATM', 'Post Office', 'Laundry'],
+    subcategories: [
+      'Gas Station',
+      'Car Wash',
+      'Auto Repair',
+      'Bank',
+      'ATM',
+      'Post Office',
+      'Laundry',
+    ],
   },
   {
     id: 'shopping',
     title: 'Shopping',
     icon: '🛍️',
-    subcategories: ['Grocery Store', 'Convenience Store', 'Mall', 'Department Store', 'Electronics', 'Clothing'],
+    subcategories: [
+      'Grocery Store',
+      'Convenience Store',
+      'Mall',
+      'Department Store',
+      'Electronics',
+      'Clothing',
+    ],
   },
   {
     id: 'entertainment',
     title: 'Entertainment',
     icon: '🎬',
-    subcategories: ['Movie Theater', 'Bowling Alley', 'Arcade', 'Museum', 'Park', 'Gym', 'Library'],
+    subcategories: [
+      'Movie Theater',
+      'Bowling Alley',
+      'Arcade',
+      'Museum',
+      'Park',
+      'Gym',
+      'Library',
+    ],
   },
   {
     id: 'transportation',
     title: 'Transportation',
     icon: '🚗',
-    subcategories: ['Parking', 'Bus Stop', 'Train Station', 'Airport', 'Taxi', 'Ride Share'],
+    subcategories: [
+      'Parking',
+      'Bus Stop',
+      'Train Station',
+      'Airport',
+      'Taxi',
+      'Ride Share',
+    ],
   },
 ];
 
@@ -117,81 +166,114 @@ const distanceFilters: DistanceFilter[] = [
   },
 ];
 
-export function PlacesOptions({ onPlaceSelect, onDistanceFilterChange, onTextToInput }: PlacesOptionsProps) {
-  const [expandedCategory, setExpandedCategory] = useState<string | null>('restaurants'); // Default to restaurants expanded
-  const [selectedDistanceFilter, setSelectedDistanceFilter] = useState<string | null>(null);
-  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(null);
+export function PlacesOptions({
+  onPlaceSelect,
+  onDistanceFilterChange,
+  onTextToInput,
+}: PlacesOptionsProps) {
+  const [expandedCategory, setExpandedCategory] = useState<string | null>(
+    null
+  ); // No category expanded by default
+  const [selectedDistanceFilter, setSelectedDistanceFilter] = useState<
+    string | null
+  >(null);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<string | null>(
+    null
+  );
 
   const handleCategoryPress = (category: PlaceCategory) => {
     // Always expand categories with subcategories, don't collapse
     if (category.subcategories && category.subcategories.length > 0) {
       setExpandedCategory(category.id);
+      // Update input text even for categories with subcategories
+      const distanceText = selectedDistanceFilter
+        ? distanceFilters.find((f) => f.id === selectedDistanceFilter)?.label
+        : '';
+
+      let fullText = `I am looking for ${category.title.toLowerCase()}`;
+
+      if (distanceText) {
+        fullText += ` within ${distanceText} distance`;
+      }
+
+      onTextToInput?.(fullText);
     } else {
       // No subcategories, select directly
       onPlaceSelect?.(category.title);
       // Set text to input with proper formatting
-      const distanceText = selectedDistanceFilter ? 
-        distanceFilters.find(f => f.id === selectedDistanceFilter)?.label : '';
-      
+      const distanceText = selectedDistanceFilter
+        ? distanceFilters.find((f) => f.id === selectedDistanceFilter)?.label
+        : '';
+
       let fullText = `I am looking for ${category.title.toLowerCase()}`;
-      
+
       if (distanceText) {
         fullText += ` within ${distanceText} distance`;
       }
-      
+
       onTextToInput?.(fullText);
     }
   };
 
-  const handleSubcategoryPress = (categoryTitle: string, subcategory: string) => {
+  const handleSubcategoryPress = (
+    categoryTitle: string,
+    subcategory: string
+  ) => {
     onPlaceSelect?.(categoryTitle, subcategory);
     setSelectedSubcategory(subcategory);
     // Don't collapse after selection - keep subcategories visible
-    
+
     // Set text to input with proper formatting
-    const distanceText = selectedDistanceFilter ? 
-      distanceFilters.find(f => f.id === selectedDistanceFilter)?.label : '';
-    
+    const distanceText = selectedDistanceFilter
+      ? distanceFilters.find((f) => f.id === selectedDistanceFilter)?.label
+      : '';
+
     let fullText = `I am looking for ${subcategory.toLowerCase()} restaurant`;
-    
+
     if (distanceText) {
       fullText += ` within ${distanceText} distance`;
     }
-    
+
     onTextToInput?.(fullText);
   };
 
   const handleDistanceFilterPress = (filter: DistanceFilter) => {
     // Toggle selection - if already selected, uncheck it
-    const newSelection = selectedDistanceFilter === filter.id ? null : filter.id;
+    const newSelection =
+      selectedDistanceFilter === filter.id ? null : filter.id;
     setSelectedDistanceFilter(newSelection);
     onDistanceFilterChange?.(newSelection ? filter : null);
-    
+
     // Update input text if a subcategory is currently selected
     if (selectedSubcategory) {
-      const distanceText = newSelection ? 
-        distanceFilters.find(f => f.id === newSelection)?.label : '';
-      
+      const distanceText = newSelection
+        ? distanceFilters.find((f) => f.id === newSelection)?.label
+        : '';
+
       let fullText = `I am looking for ${selectedSubcategory.toLowerCase()} restaurant`;
-      
+
       if (distanceText) {
         fullText += ` within ${distanceText} distance`;
       }
-      
+
       onTextToInput?.(fullText);
     }
   };
 
-  const expandedCategoryData = expandedCategory 
-    ? placeCategories.find(cat => cat.id === expandedCategory)
+  const expandedCategoryData = expandedCategory
+    ? placeCategories.find((cat) => cat.id === expandedCategory)
     : null;
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>What are you looking for?</Text>
-      
+
       {/* Category buttons - always in a fixed horizontal row */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoriesContainer}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoriesContainer}
+      >
         {placeCategories.map((category) => (
           <TouchableOpacity
             key={category.id}
@@ -207,40 +289,59 @@ export function PlacesOptions({ onPlaceSelect, onDistanceFilterChange, onTextToI
         ))}
       </ScrollView>
 
-      {/* Subcategories - always show when category is expanded */}
-      {expandedCategoryData && (
-        <View style={styles.subcategoriesWrapper}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.subcategoriesContainer}>
-            {expandedCategoryData.subcategories?.map((subcategory, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.subcategoryButton}
-                onPress={() => handleSubcategoryPress(expandedCategoryData.title, subcategory)}
-              >
-                <Text style={styles.subcategoryText}>{subcategory}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
+      {/* Subcategories - show when category is expanded */}
+      {expandedCategoryData &&
+        expandedCategoryData.subcategories &&
+        expandedCategoryData.subcategories.length > 0 && (
+          <View style={styles.subcategoriesWrapper}>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.subcategoriesContainer}
+            >
+              {expandedCategoryData.subcategories?.map((subcategory, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.subcategoryButton}
+                  onPress={() =>
+                    handleSubcategoryPress(
+                      expandedCategoryData.title,
+                      subcategory
+                    )
+                  }
+                >
+                  <Text style={styles.subcategoryText}>{subcategory}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
       {/* Distance filters - smaller and less prominent */}
       <View style={styles.distanceFiltersSection}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.distanceFiltersContainer}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.distanceFiltersContainer}
+        >
           {distanceFilters.map((filter) => (
             <TouchableOpacity
               key={filter.id}
               style={[
                 styles.distanceFilterButton,
-                selectedDistanceFilter === filter.id && styles.distanceFilterButtonSelected,
+                selectedDistanceFilter === filter.id &&
+                  styles.distanceFilterButtonSelected,
               ]}
               onPress={() => handleDistanceFilterPress(filter)}
             >
               <Text style={styles.distanceFilterIcon}>{filter.icon}</Text>
-              <Text style={[
-                styles.distanceFilterLabel,
-                selectedDistanceFilter === filter.id && styles.distanceFilterLabelSelected,
-              ]}>
+              <Text
+                style={[
+                  styles.distanceFilterLabel,
+                  selectedDistanceFilter === filter.id &&
+                    styles.distanceFilterLabelSelected,
+                ]}
+              >
                 {filter.label}
               </Text>
             </TouchableOpacity>
@@ -355,4 +456,4 @@ const styles = StyleSheet.create({
     color: '#2196f3',
     fontWeight: '500',
   },
-}); 
+});
