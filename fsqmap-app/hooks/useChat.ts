@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState, useMemo } from 'react';
 import { useChat } from '@ai-sdk/react';
 import { fetch as expoFetch } from 'expo/fetch';
 import { useLocation } from './useLocation';
@@ -61,6 +61,10 @@ export const useLocationChat = (options: UseChatOptions = {}) => {
   // preserve the tool data between renders
   const toolAdditionalData = useRef<Record<string, unknown>>({});
   const hasAutoSent = useRef(false);
+  const [toolDataVersion, setToolDataVersion] = useState(0);
+
+  // Create a stable reference to toolAdditionalData that only changes when new data is added
+  const stableToolAdditionalData = useMemo(() => toolAdditionalData.current, [toolDataVersion]);
 
   const {
     messages,
@@ -77,6 +81,7 @@ export const useLocationChat = (options: UseChatOptions = {}) => {
     onError,
     onFinish: (message) => {
       // save the message.annotations from server-side tools for rendering tools
+      let hasNewData = false;
       message.annotations?.forEach((annotation) => {
         if (typeof annotation === 'object' && annotation !== null) {
           // annotation is a record of toolCallId and data from server-side tools
@@ -88,11 +93,22 @@ export const useLocationChat = (options: UseChatOptions = {}) => {
             };
             if (toolAdditionalData.current[toolCallId] === undefined) {
               toolAdditionalData.current[toolCallId] = data;
+              hasNewData = true;
             }
+            console.log('useChat: toolAdditionalData updated', {
+              toolCallId,
+              data,
+              allData: toolAdditionalData.current
+            });
           }
-          console.log('toolAdditionalData', toolAdditionalData.current);
         }
       });
+      
+      // Only trigger re-render if new tool data was added
+      if (hasNewData) {
+        console.log('useChat: Triggering re-render due to new tool data');
+        setToolDataVersion(prev => prev + 1);
+      }
     },
   });
 
@@ -232,6 +248,6 @@ export const useLocationChat = (options: UseChatOptions = {}) => {
     // Utility functions
     stripLocationInfo,
     formatLocationInfo,
-    toolAdditionalData: toolAdditionalData.current,
+    toolAdditionalData: stableToolAdditionalData,
   };
 }; 

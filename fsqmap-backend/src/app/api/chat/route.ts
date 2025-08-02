@@ -1,13 +1,8 @@
 import { openai } from '@ai-sdk/openai';
-import { createDataStreamResponse, streamText, Tool } from 'ai';
-import { z } from 'zod';
-import {
-  convertToVercelAiTool,
-  ToolOutputManager,
-  ConversationCache,
-} from '@openassistant/utils';
-import { placeSearch, geotagging } from '@openassistant/places';
+import { createDataStreamResponse, streamText } from 'ai';
+import { ConversationCache } from '@openassistant/utils';
 import { FSQMAP_SYSTEM_MESSAGE } from './systemMessages';
+import { createTools } from '../../lib/tools';
 
 // Create a conversation cache instance with custom configuration
 const conversationCache = new ConversationCache({
@@ -17,45 +12,11 @@ const conversationCache = new ConversationCache({
   enableLogging: true, // Enable logging for debugging
 });
 
-function createTools(
-  toolOutputManager: ToolOutputManager
-): Record<string, Tool> {
-  // @ts-expect-error - placeSearch is a valid tool
-  const placeSearchTool = convertToVercelAiTool(
-    {
-      ...placeSearch,
-      context: {
-        getFsqToken: () => process.env.FSQ_TOKEN || '',
-      },
-      onToolCompleted: toolOutputManager.createOnToolCompletedCallback(),
-    },
-    { isExecutable: true }
-  );
-
-  // @ts-expect-error - placeSearch is a valid tool
-  const geotaggingTool = convertToVercelAiTool(
-    {
-      ...geotagging,
-      context: {
-        getFsqToken: () => process.env.FSQ_TOKEN || '',
-      },
-      onToolCompleted: toolOutputManager.createOnToolCompletedCallback(),
-    },
-    { isExecutable: true }
-  );
-
-  return {
-    placeSearch: placeSearchTool,
-    geotagging: geotaggingTool,
-  };
-}
-
 export async function POST(req: Request) {
   try {
     console.log('Chat API called');
 
     const { id: requestId, messages } = await req.json();
-    console.log('Received messages:', JSON.stringify(messages, null, 2));
     console.log('Request ID:', requestId);
 
     // Get conversation-scoped ToolOutputManager
@@ -80,17 +41,22 @@ export async function POST(req: Request) {
             // maxTokens: 2000, // Increased from 50w longer responses
             maxSteps: 10,
             tools,
+            // add debug logging to check which tool was called
+            onChunk: (event) => {
+              const { chunk } = event;
+              if (chunk.type === 'tool-call') {
+                console.log('✅ Tool called:', chunk.toolName);
+              }
+            },
             async onFinish() {
               // Only write tool data to client if tools were actually called in THIS request
               const hasToolOutputsInSession =
                 await toolOutputManager.hasToolOutputsInCurrentSession();
-              console.log('Has tool outputs in session:', hasToolOutputsInSession);
-              
+
               if (hasToolOutputsInSession) {
                 const lastToolData =
                   await toolOutputManager.getLastToolOutputFromCurrentSession();
-                console.log('Last tool data:', lastToolData);
-                
+
                 if (lastToolData) {
                   console.log('write toolData back to client', lastToolData);
                   // @ts-expect-error - toolAdditionalData is a record of unknown values

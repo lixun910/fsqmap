@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { GeotaggingResult } from './GeotaggingResult';
 import { PlacesResult } from './PlacesResult';
@@ -8,6 +8,7 @@ interface ToolResultProps {
   toolName: string;
   toolData: any;
   onCandidateSelect?: (candidate: any) => void;
+  isLoading?: boolean;
 }
 
 export function ToolResult({
@@ -15,28 +16,24 @@ export function ToolResult({
   toolName,
   toolData,
   onCandidateSelect,
+  isLoading = false,
 }: ToolResultProps) {
-
   const renderDefaultResult = (data: any) => {
-    return (
-      <View
-        style={{
-          backgroundColor: '#f8f9fa',
-          padding: 16,
-          borderRadius: 8,
-          marginVertical: 8,
-        }}
-      >
-        <Text style={{ fontSize: 14, color: '#495057', marginBottom: 8 }}>
-          Tool: {toolName}
-        </Text>
-        <Text
-          style={{ fontSize: 12, color: '#6c757d', fontFamily: 'monospace' }}
-        >
-          {JSON.stringify(data, null, 2)}
-        </Text>
-      </View>
-    );
+    return null;
+    // return (
+    //   <View
+    //     style={{
+    //       backgroundColor: '#f8f9fa',
+    //       padding: 16,
+    //       borderRadius: 8,
+    //       marginVertical: 8,
+    //     }}
+    //   >
+    //     <Text style={{ fontSize: 14, color: '#495057', marginBottom: 8 }}>
+    //       Tool: {toolName}
+    //     </Text>
+    //   </View>
+    // );
   };
 
   switch (toolName) {
@@ -48,9 +45,9 @@ export function ToolResult({
         />
       );
 
-    case 'placeSearch':
+    case 'findPlace':
       return (
-        <PlacesResult data={toolData} />
+        <PlacesResult data={toolData} isLoading={isLoading} />
       );
 
     default:

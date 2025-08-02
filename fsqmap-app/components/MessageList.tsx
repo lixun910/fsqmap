@@ -83,12 +83,15 @@ export function MessageList({
                 } else if (p.type === 'reasoning') {
                   return <Markdown key={index}>{p.reasoning}</Markdown>;
                 } else if (p.type === 'tool-invocation') {
+                  const toolData = toolAdditionalData[p.toolInvocation.toolCallId];
+                  
                   return (
                     <ToolResult
                       key={index}
                       toolCallId={p.toolInvocation.toolCallId}
                       toolName={p.toolInvocation.toolName}
-                      toolData={toolAdditionalData[p.toolInvocation.toolCallId]}
+                      toolData={toolData}
+                      isLoading={!toolData} // Show loading if no tool data
                       onCandidateSelect={(candidate) => 
                         handleCandidateSelect(p.toolInvocation.toolCallId, candidate)
                       }
