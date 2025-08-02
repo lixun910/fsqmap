@@ -21,6 +21,7 @@ For findPlace tool:
   - call spatialFilter tool to filter the placeSearch results that are within the isochrone polygon.
   - pass the isochrone datasetName and and spatialFilter datasetName to the findPlace tool.
 - Last, call findPlace tool to return the final results.
+- Please do not list the names of the places in the response, the tool will render the places in a map.
 
 For responses:
 - please use markdown to format your responses.

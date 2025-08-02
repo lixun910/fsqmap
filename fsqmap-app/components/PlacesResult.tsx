@@ -547,6 +547,7 @@ const PlacesMap = React.memo(
     userLocation,
     mapRegion,
     onMarkerPress,
+    mapRef,
   }: {
     places: Place[];
     isochronePolygons: IsochronePolygon[];
@@ -554,8 +555,8 @@ const PlacesMap = React.memo(
     userLocation: any;
     mapRegion: any;
     onMarkerPress: (placeId: string) => void;
+    mapRef: React.RefObject<MapView>;
      }) => {
-     const mapViewRef = useRef<MapView>(null);
 
     const validPlaces = useMemo(
       () =>
@@ -568,8 +569,8 @@ const PlacesMap = React.memo(
     );
 
     const animateToPlace = useCallback((place: Place) => {
-      if (mapViewRef.current) {
-        mapViewRef.current.animateToRegion(
+      if (mapRef.current) {
+        mapRef.current.animateToRegion(
           {
             latitude: place.location.latitude,
             longitude: place.location.longitude,
@@ -579,12 +580,12 @@ const PlacesMap = React.memo(
           MAP_ANIMATION_DURATION
         );
       }
-    }, []);
+    }, [mapRef]);
 
     return (
       <View style={styles.mapContainer}>
         <MapView
-          ref={mapViewRef}
+          ref={mapRef}
           style={styles.map}
           initialRegion={mapRegion}
           zoomEnabled={true}
@@ -665,6 +666,7 @@ export function PlacesResult({
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null);
   const hasAutoSelectedRef = useRef<boolean>(false);
   const scrollViewRef = useRef<ScrollView>(null);
+  const mapViewRef = useRef<MapView>(null);
 
   // Get dataset name and features
   const datasetName = data?.datasetName;
@@ -706,6 +708,19 @@ export function PlacesResult({
       const selectedPlace = places.find((place) => place.id === placeId);
       if (selectedPlace) {
         onPlaceSelect?.(selectedPlace);
+        
+        // Zoom to the selected place on the map
+        if (mapViewRef.current) {
+          mapViewRef.current.animateToRegion(
+            {
+              latitude: selectedPlace.location.latitude,
+              longitude: selectedPlace.location.longitude,
+              latitudeDelta: DEFAULT_ZOOM_DELTA,
+              longitudeDelta: DEFAULT_ZOOM_DELTA,
+            },
+            MAP_ANIMATION_DURATION
+          );
+        }
       }
     },
     [places, onPlaceSelect]
@@ -753,6 +768,7 @@ export function PlacesResult({
           userLocation={userLocation}
           mapRegion={mapRegion}
           onMarkerPress={handleMarkerPress}
+          mapRef={mapViewRef}
         />
       )}
 
