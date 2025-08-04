@@ -72,4 +72,5 @@ export interface BuyHouseResultProps {
   isLoading?: boolean;
   redfinUrl?: string;
   redfinDescription?: string;
+  houseThumbnail?: string;
 } 

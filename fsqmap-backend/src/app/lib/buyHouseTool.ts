@@ -5,6 +5,7 @@ import * as turf from '@turf/turf';
 export type BuyHouseFunctionArgs = z.ZodObject<{
   redfinDescription: z.ZodString;
   redfinUrl: z.ZodString;
+  houseThumbnail: z.ZodOptional<z.ZodString>;
   schoolsDatasetName: z.ZodString;
   groceryStoresDatasetName: z.ZodString;
   parksDatasetName: z.ZodString;
@@ -25,6 +26,7 @@ interface BuyHouseLlmResult {
 interface BuyHouseAdditionalData {
   redfinUrl?: string;
   redfinDescription?: string;
+  houseThumbnail?: string;
   datasetName?: string;
   combinedGeoJSON?: GeoJSON.FeatureCollection;
 }
@@ -102,6 +104,10 @@ export const buyHouse = extendedTool<
       .string()
       .describe('The Redfin description of the property'),
     redfinUrl: z.string().describe('The Redfin URL of the property'),
+    houseThumbnail: z
+      .string()
+      .optional()
+      .describe('Base64 encoded image content of the house thumbnail'),
     schoolsDatasetName: z
       .string()
       .describe('The name of the dataset containing schools'),
@@ -139,6 +145,7 @@ export const buyHouse = extendedTool<
       const {
         redfinDescription,
         redfinUrl,
+        houseThumbnail,
         schoolsDatasetName,
         groceryStoresDatasetName,
         parksDatasetName,
@@ -336,6 +343,7 @@ export const buyHouse = extendedTool<
         additionalData: {
           redfinUrl,
           redfinDescription,
+          houseThumbnail,
           datasetName,
           [datasetName]: combinedGeoJSON,
         },

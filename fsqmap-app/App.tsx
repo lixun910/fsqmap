@@ -110,7 +110,7 @@ export default function App() {
       {/* Overlay with buttons */}
       <View style={styles.overlay}>
         <View style={styles.contentContainer}>
-          <Text style={styles.title}>I'm George</Text>
+          <Text style={styles.title}>I'm</Text>
           
           <TouchableOpacity
             style={[styles.button, styles.checkInButton]}

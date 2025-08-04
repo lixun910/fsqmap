@@ -123,7 +123,7 @@ export function BuyHouseUI({
                 Looking to buy a house?
               </Text>
               <Text style={{ fontSize: 14, color: '#666', lineHeight: 20 }}>
-                I can help you find properties, compare prices, and get information about neighborhoods. 
+                I can help you find properties and get information about neighborhoods. 
                 Just tell me what you're looking for!
               </Text>
             </View>
