@@ -19,7 +19,7 @@ export default function BuyHouse({ onBack }: BuyHouseProps) {
     handleSubmitWithLocation,
     stripLocationInfo,
     toolAdditionalData,
-  } = useLocationChat({ autoSendMessage: 'Help me find a house to buy' });
+  } = useLocationChat({ autoSendMessage: 'Hi. I am looking to buy a house here.' });
 
   return (
     <BuyHouseUI

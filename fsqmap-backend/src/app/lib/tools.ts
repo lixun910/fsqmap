@@ -1,8 +1,9 @@
-import { geotagging, placeSearch } from '@openassistant/places';
-import { geocoding, routing, isochrone } from '@openassistant/osm';
+import { geotagging, placeSearch, webSearch } from '@openassistant/places';
+import { geocoding, reverseGeocoding, routing, isochrone } from '@openassistant/osm';
 import { buffer, spatialFilter } from '@openassistant/geoda';
 import { convertToVercelAiTool, ToolOutputManager } from '@openassistant/utils';
 import { findPlace } from './findPlaceTool';
+import { buyHouse } from './buyHouseTool';
 
 // Helper function to get geometries from dataset
 const createGetGeometries =
@@ -92,6 +93,15 @@ export function createTools(
   );
 
   // @ts-expect-error - placeSearch is a valid tool
+  const reverseGeocodingTool = convertToVercelAiTool(
+    {
+      ...reverseGeocoding,
+      onToolCompleted: toolOutputManager.createOnToolCompletedCallback(),
+    },
+    { isExecutable: true }
+  );
+
+  // @ts-expect-error - placeSearch is a valid tool
   const bufferTool = convertToVercelAiTool(
     {
       ...buffer,
@@ -142,14 +152,41 @@ export function createTools(
     { isExecutable: true }
   );
 
+  // @ts-expect-error - placeSearch is a valid tool
+  const buyHouseTool = convertToVercelAiTool(
+    {
+      ...buyHouse,
+      context: {
+        getGeometries,
+      },
+      onToolCompleted: toolOutputManager.createOnToolCompletedCallback(),
+    },
+    { isExecutable: true }
+  );
+
+  // @ts-expect-error - placeSearch is a valid tool
+  const webSearchTool = convertToVercelAiTool(
+    {
+      ...webSearch,
+      context: {
+        getSearchAPIKey: () => process.env.SERPER_API_KEY || '',
+      },
+      onToolCompleted: toolOutputManager.createOnToolCompletedCallback(),
+    },
+    { isExecutable: true }
+  );
+
   return {
     placeSearch: placeSearchTool,
     geotagging: geotaggingTool,
     isochrone: isochroneTool,
     routing: routingTool,
     geocoding: geocodingTool,
+    reverseGeocoding: reverseGeocodingTool,
     buffer: bufferTool,
     spatialFilter: spatialFilterTool,
     findPlace: findPlaceTool,
+    buyHouse: buyHouseTool,
+    webSearch: webSearchTool,
   };
 }

@@ -11,159 +11,14 @@ import {
 } from 'react-native';
 import MapView, { Marker, Polygon } from 'react-native-maps';
 import { useLocation } from '../hooks/useLocation';
-
-// Types
-interface Location {
-  latitude: number;
-  longitude: number;
-  address: string;
-  city: string;
-  state: string;
-  country: string;
-  postalCode: string;
-}
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-}
-
-interface Chain {
-  id: string;
-  name?: string;
-}
-
-interface SocialMedia {
-  facebook_id?: string;
-  twitter?: string;
-}
-
-interface RelatedPlaces {
-  parent?: {
-    fsq_place_id: string;
-    categories: Category[];
-    name: string;
-  };
-}
-
-interface Place {
-  id: string;
-  name: string;
-  location: Location;
-  categories: Category[];
-  chains?: Chain[];
-  distance: number;
-  phone?: string;
-  website?: string;
-  socialMedia?: SocialMedia;
-  dateCreated: string;
-  dateRefreshed: string;
-  extendedLocation?: {
-    dma: string;
-    census_block_id: string;
-  };
-  link: string;
-  placemakerUrl: string;
-  relatedPlaces: RelatedPlaces;
-}
-
-interface GeoJSONPointFeature {
-  type: 'Feature';
-  id: string;
-  geometry: {
-    type: 'Point';
-    coordinates: [number, number];
-  };
-  properties: {
-    id: string;
-    name: string;
-    address: string;
-    city: string;
-    state: string;
-    country: string;
-    postalCode: string;
-    categories: Category[];
-    chains?: Chain[];
-    distance: number;
-    phone?: string;
-    website?: string;
-    rating?: number;
-    price?: number;
-    hours?: any;
-    description?: string;
-    email?: string;
-    attributes?: any;
-    photos?: any;
-    popularity?: number;
-    verified?: boolean;
-    socialMedia?: SocialMedia;
-    stats?: any;
-    tastes?: any;
-    tips?: any;
-    dateCreated: string;
-    dateRefreshed: string;
-    dateClosed?: string;
-    extendedLocation?: {
-      dma: string;
-      census_block_id: string;
-    };
-    hoursPopular?: any;
-    link: string;
-    menu?: any;
-    placemakerUrl: string;
-    storeId?: string;
-    relatedPlaces: RelatedPlaces;
-    latitude?: number;
-    longitude?: number;
-  };
-}
-
-interface GeoJSONPolygonFeature {
-  type: 'Feature';
-  id: string;
-  geometry: {
-    type: 'Polygon';
-    coordinates: [number, number][][];
-  };
-  properties: {
-    time?: number;
-    distance?: number;
-    [key: string]: any;
-  };
-}
-
-type GeoJSONFeature = GeoJSONPointFeature | GeoJSONPolygonFeature;
-
-interface IsochronePolygon {
-  id: string;
-  coordinates: [number, number][];
-  time?: number;
-  distance?: number;
-}
-
-interface GeoJSONData {
-  type: 'FeatureCollection';
-  features: GeoJSONFeature[];
-}
-
-interface PlacesData {
-  type: 'geojson';
-  content: GeoJSONData;
-}
-
-interface PlacesResultProps {
-  data: PlacesData | any;
-  onPlaceSelect?: (place: Place) => void;
-  isLoading?: boolean;
-}
+import { BuyHousePlace, BuyHousePolygon, BuyHouseResultProps } from '../types/BuyHouse';
 
 // Constants
-
 const MAP_ANIMATION_DURATION = 1000;
 const DEFAULT_ZOOM_DELTA = 0.001;
 const MAP_PADDING_FACTOR = 1.2;
 const MAX_ZOOM_DELTA = 0.01;
+const MIN_ZOOM_DELTA = 0.0001; // Minimum zoom to ensure markers are visible
 
 // Styles
 const styles = StyleSheet.create({
@@ -225,12 +80,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginBottom: 8,
   },
-  debugText: {
-    fontSize: 10,
-    color: '#ccc',
-    textAlign: 'center',
-    fontFamily: 'monospace',
-  },
   mapContainer: {
     height: 200,
     borderRadius: 12,
@@ -244,6 +93,38 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  houseDescriptionContainer: {
+    backgroundColor: 'white',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  houseDescriptionContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  houseIcon: {
+    fontSize: 24,
+    marginRight: 12,
+    marginTop: 2,
+  },
+  houseDescriptionText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+  },
+  redfinLink: {
+    color: '#007AFF',
+    textDecorationLine: 'underline',
+    marginTop: 8,
+    fontSize: 12,
   },
 });
 
@@ -261,16 +142,16 @@ const isValidGeometry = (geometry: any): boolean => {
   );
 };
 
-const extractCoordinates = (
-  feature: GeoJSONPointFeature
-): { latitude: number; longitude: number } | null => {
+const extractCoordinates = (feature: any): { latitude: number; longitude: number } | null => {
   const { geometry, properties } = feature;
 
   // Try geometry coordinates first
   if (isValidGeometry(geometry)) {
-    const [longitude, latitude] = geometry.coordinates;
-    if (isValidCoordinate(longitude) && isValidCoordinate(latitude)) {
-      return { latitude, longitude };
+    if (geometry.type === 'Point') {
+      const [longitude, latitude] = geometry.coordinates;
+      if (isValidCoordinate(longitude) && isValidCoordinate(latitude)) {
+        return { latitude, longitude };
+      }
     }
   }
 
@@ -285,48 +166,39 @@ const extractCoordinates = (
   return null;
 };
 
-const convertGeoJSONFeatureToPlace = (
-  feature: GeoJSONPointFeature
-): Place | null => {
+const convertGeoJSONFeatureToPlace = (feature: any): BuyHousePlace | null => {
   const { properties } = feature;
   const coordinates = extractCoordinates(feature);
 
   if (!coordinates) {
+    console.log('convertGeoJSONFeatureToPlace: No coordinates found for feature', feature.id);
     return null;
   }
 
   return {
-    id: properties.id,
+    id: properties.id || feature.id,
     name: properties.name,
     location: {
       ...coordinates,
-      address: properties.address,
-      city: properties.city,
-      state: properties.state,
-      country: properties.country,
-      postalCode: properties.postalCode,
+      address: properties.address || '',
+      city: properties.city || '',
+      state: properties.state || '',
+      country: properties.country || '',
+      postalCode: properties.postalCode || '',
     },
     categories: properties.categories || [],
-    chains: properties.chains,
-    distance: properties.distance,
+    distance: properties.distance || 0,
     phone: properties.phone,
     website: properties.website,
-    socialMedia: properties.socialMedia,
-    dateCreated: properties.dateCreated,
-    dateRefreshed: properties.dateRefreshed,
-    extendedLocation: properties.extendedLocation,
-    link: properties.link,
-    placemakerUrl: properties.placemakerUrl,
-    relatedPlaces: properties.relatedPlaces || {},
+    category: properties.category,
+    color: properties.color,
   };
 };
 
-const convertGeoJSONFeatureToIsochrone = (
-  feature: GeoJSONPolygonFeature
-): IsochronePolygon | null => {
+const convertGeoJSONFeatureToPolygon = (feature: any): BuyHousePolygon | null => {
   const { properties, geometry } = feature;
 
-  if (!isValidGeometry(geometry) || geometry.coordinates.length === 0) {
+  if (!isValidGeometry(geometry) || geometry.type !== 'Polygon' || geometry.coordinates.length === 0) {
     return null;
   }
 
@@ -342,48 +214,57 @@ const convertGeoJSONFeatureToIsochrone = (
   return {
     id: feature.id,
     coordinates: exteriorRing,
-    time: properties.time,
-    distance: properties.distance,
+    category: properties.category,
+    color: properties.color,
+    opacity: properties.opacity || 0.3,
   };
 };
 
-// Custom hook for places data processing
-const usePlacesData = (features: GeoJSONFeature[] | undefined) => {
+// Custom hook for buy house data processing
+const useBuyHouseData = (features: any[] | undefined) => {
   return useMemo(() => {
     if (!features || features.length === 0) {
-      return { places: [], isochrones: [] };
+      console.log('useBuyHouseData: No features found');
+      return { places: [], polygons: [] };
     }
 
     try {
+      console.log('useBuyHouseData: Processing', features.length, 'features');
+      
       const pointFeatures = features.filter(
-        (feature: GeoJSONFeature) => feature.geometry?.type === 'Point'
-      ) as GeoJSONPointFeature[];
+        (feature: any) => feature.geometry?.type === 'Point'
+      );
 
       const polygonFeatures = features.filter(
-        (feature: GeoJSONFeature) => feature.geometry?.type === 'Polygon'
-      ) as GeoJSONPolygonFeature[];
+        (feature: any) => feature.geometry?.type === 'Polygon'
+      );
+
+      console.log('useBuyHouseData: Found', pointFeatures.length, 'points and', polygonFeatures.length, 'polygons');
 
       const places = pointFeatures
         .map(convertGeoJSONFeatureToPlace)
-        .filter(Boolean) as Place[];
+        .filter(Boolean) as BuyHousePlace[];
 
-      const isochrones = polygonFeatures
-        .map(convertGeoJSONFeatureToIsochrone)
-        .filter(Boolean) as IsochronePolygon[];
+      const polygons = polygonFeatures
+        .map(convertGeoJSONFeatureToPolygon)
+        .filter(Boolean) as BuyHousePolygon[];
 
-      return { places, isochrones };
+      console.log('useBuyHouseData: Converted to', places.length, 'places and', polygons.length, 'polygons');
+
+      return { places, polygons };
     } catch (error) {
-      return { places: [], isochrones: [] };
+      console.error('Error processing buy house data:', error);
+      return { places: [], polygons: [] };
     }
   }, [features]);
 };
 
 const calculateMapRegion = (
-  places: Place[],
+  places: BuyHousePlace[],
   selectedPlaceId: string | null,
-  isochrones: IsochronePolygon[] = []
+  polygons: BuyHousePolygon[] = []
 ) => {
-  if (places.length === 0 && isochrones.length === 0) return null;
+  if (places.length === 0 && polygons.length === 0) return null;
 
   const validPlaces = places.filter(
     (place) =>
@@ -391,7 +272,7 @@ const calculateMapRegion = (
       isValidCoordinate(place.location.longitude)
   );
 
-  const validIsochrones = isochrones.filter(
+  const validPolygons = polygons.filter(
     (polygon) =>
       polygon.coordinates.length >= 3 &&
       polygon.coordinates.every(
@@ -399,17 +280,19 @@ const calculateMapRegion = (
       )
   );
 
-  if (validPlaces.length === 0 && validIsochrones.length === 0) {
+  if (validPlaces.length === 0 && validPolygons.length === 0) {
     return null;
   }
 
-  // If we have isochrones, prioritize them for the map region
-  if (validIsochrones.length > 0) {
+  console.log('calculateMapRegion: Found', validPlaces.length, 'valid places and', validPolygons.length, 'valid polygons');
+
+  // If we have polygons, prioritize them for the map region
+  if (validPolygons.length > 0) {
     const allLatitudes: number[] = [];
     const allLongitudes: number[] = [];
 
-    // Add isochrone coordinates first
-    validIsochrones.forEach((polygon) => {
+    // Add polygon coordinates first
+    validPolygons.forEach((polygon) => {
       polygon.coordinates.forEach((coord) => {
         allLatitudes.push(coord[1]);
         allLongitudes.push(coord[0]);
@@ -427,16 +310,29 @@ const calculateMapRegion = (
     const minLng = Math.min(...allLongitudes);
     const maxLng = Math.max(...allLongitudes);
 
-    // Use a smaller padding factor for isochrones to show more detail
-    const isochronePaddingFactor = 1.05;
-    const latDelta = Math.min(
-      (maxLat - minLat) * isochronePaddingFactor,
-      MAX_ZOOM_DELTA
+    // Use a smaller padding factor for polygons to show more detail
+    const polygonPaddingFactor = 1.05;
+    const latDelta = Math.max(
+      Math.min(
+        (maxLat - minLat) * polygonPaddingFactor,
+        MAX_ZOOM_DELTA
+      ),
+      MIN_ZOOM_DELTA
     );
-    const lngDelta = Math.min(
-      (maxLng - minLng) * isochronePaddingFactor,
-      MAX_ZOOM_DELTA
+    const lngDelta = Math.max(
+      Math.min(
+        (maxLng - minLng) * polygonPaddingFactor,
+        MAX_ZOOM_DELTA
+      ),
+      MIN_ZOOM_DELTA
     );
+
+    console.log('calculateMapRegion: Polygon-based region:', {
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: latDelta,
+      longitudeDelta: lngDelta,
+    });
 
     return {
       latitude: (minLat + maxLat) / 2,
@@ -446,7 +342,7 @@ const calculateMapRegion = (
     };
   }
 
-  // Focus on selected place if no isochrones
+  // Focus on selected place if no polygons
   if (selectedPlaceId && validPlaces.length > 0) {
     const selectedPlace = validPlaces.find(
       (place) => place.id === selectedPlaceId
@@ -470,14 +366,27 @@ const calculateMapRegion = (
   const minLng = Math.min(...longitudes);
   const maxLng = Math.max(...longitudes);
 
-  const latDelta = Math.min(
-    (maxLat - minLat) * MAP_PADDING_FACTOR,
-    MAX_ZOOM_DELTA
+  const latDelta = Math.max(
+    Math.min(
+      (maxLat - minLat) * MAP_PADDING_FACTOR,
+      MAX_ZOOM_DELTA
+    ),
+    MIN_ZOOM_DELTA
   );
-  const lngDelta = Math.min(
-    (maxLng - minLng) * MAP_PADDING_FACTOR,
-    MAX_ZOOM_DELTA
+  const lngDelta = Math.max(
+    Math.min(
+      (maxLng - minLng) * MAP_PADDING_FACTOR,
+      MAX_ZOOM_DELTA
+    ),
+    MIN_ZOOM_DELTA
   );
+
+  console.log('calculateMapRegion: Places-only region:', {
+    latitude: (minLat + maxLat) / 2,
+    longitude: (minLng + maxLng) / 2,
+    latitudeDelta: latDelta,
+    longitudeDelta: lngDelta,
+  });
 
   return {
     latitude: (minLat + maxLat) / 2,
@@ -491,7 +400,7 @@ const calculateMapRegion = (
 const LoadingAnimation = React.memo(() => (
   <View style={styles.loadingContainer}>
     <ActivityIndicator size="large" color="#007AFF" />
-    <Text style={styles.loadingText}>Searching for places...</Text>
+    <Text style={styles.loadingText}>Analyzing property...</Text>
     <View style={styles.loadingDots}>
       <View style={[styles.loadingDot, { opacity: 0.6 }]} />
       <View style={[styles.loadingDot, { opacity: 0.8 }]} />
@@ -503,13 +412,53 @@ const LoadingAnimation = React.memo(() => (
 // No places component
 const NoPlacesFound = React.memo(({ data }: { data: any }) => (
   <View style={styles.noPlacesContainer}>
-    <Text style={styles.noPlacesText}>No places found</Text>
+    <Text style={styles.noPlacesText}>No amenities found</Text>
     <Text style={styles.noPlacesSubtext}>
-      Try searching for a different location or category
+      No nearby amenities found within the specified distances
     </Text>
-
   </View>
 ));
+
+// House description component
+const HouseDescription = React.memo(({ 
+  redfinDescription, 
+  redfinUrl 
+}: { 
+  redfinDescription?: string; 
+  redfinUrl?: string; 
+}) => {
+  if (!redfinDescription) {
+    return null;
+  }
+
+  const handleRedfinPress = () => {
+    if (redfinUrl) {
+      Linking.openURL(redfinUrl);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      style={styles.houseDescriptionContainer}
+      onPress={handleRedfinPress}
+      activeOpacity={redfinUrl ? 0.8 : 1}
+    >
+      <View style={styles.houseDescriptionContent}>
+        <Text style={styles.houseIcon}>🏠</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.houseDescriptionText}>
+            {redfinDescription}
+          </Text>
+          {redfinUrl && (
+            <Text style={styles.redfinLink}>
+              View on Redfin →
+            </Text>
+          )}
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+});
 
 // Individual marker component for better performance
 const PlaceMarker = React.memo(
@@ -518,7 +467,7 @@ const PlaceMarker = React.memo(
     isSelected,
     onPress,
   }: {
-    place: Place;
+    place: BuyHousePlace;
     isSelected: boolean;
     onPress: () => void;
   }) => (
@@ -529,35 +478,37 @@ const PlaceMarker = React.memo(
       }}
       title={place.name}
       description={place.location.address}
-      pinColor={isSelected ? 'green' : 'red'}
+      pinColor={isSelected ? 'green' : place.color || 'red'}
       onPress={onPress}
       tracksViewChanges={false}
       opacity={1}
-      zIndex={999}
+      zIndex={isSelected ? 1000 : 999}
+      flat={false}
+      anchor={{ x: 0.5, y: 1.0 }}
+      centerOffset={{ x: 0, y: 0 }}
     />
   )
 );
 
 // Map component
-const PlacesMap = React.memo(
+const BuyHouseMap = React.memo(
   ({
     places,
-    isochronePolygons,
+    polygons,
     selectedPlaceId,
     userLocation,
     mapRegion,
     onMarkerPress,
     mapRef,
   }: {
-    places: Place[];
-    isochronePolygons: IsochronePolygon[];
+    places: BuyHousePlace[];
+    polygons: BuyHousePolygon[];
     selectedPlaceId: string | null;
     userLocation: any;
     mapRegion: any;
     onMarkerPress: (placeId: string) => void;
     mapRef: React.RefObject<MapView | null>;
-     }) => {
-
+  }) => {
     const validPlaces = useMemo(
       () =>
         places.filter(
@@ -568,20 +519,6 @@ const PlacesMap = React.memo(
       [places]
     );
 
-    const animateToPlace = useCallback((place: Place) => {
-      if (mapRef.current) {
-        mapRef.current.animateToRegion(
-          {
-            latitude: place.location.latitude,
-            longitude: place.location.longitude,
-            latitudeDelta: DEFAULT_ZOOM_DELTA,
-            longitudeDelta: DEFAULT_ZOOM_DELTA,
-          },
-          MAP_ANIMATION_DURATION
-        );
-      }
-    }, [mapRef]);
-
     return (
       <View style={styles.mapContainer}>
         <MapView
@@ -589,9 +526,18 @@ const PlacesMap = React.memo(
           style={styles.map}
           initialRegion={mapRegion}
           zoomEnabled={true}
+          showsUserLocation={false}
+          showsMyLocationButton={false}
+          showsCompass={true}
+          showsScale={true}
+          showsBuildings={false}
+          showsTraffic={false}
+          showsIndoors={false}
+          liteMode={false}
+          mapType="standard"
         >
-          {/* Isochrone polygons */}
-          {isochronePolygons.map((polygon) => {
+          {/* Drive time polygons */}
+          {polygons.map((polygon) => {
             const coordinates = polygon.coordinates.map((coord) => ({
               latitude: coord[1],
               longitude: coord[0],
@@ -609,27 +555,38 @@ const PlacesMap = React.memo(
               return null;
             }
 
-            return (
-              <Polygon
-                key={`isochrone-${polygon.id}`}
-                coordinates={validCoordinates}
-                fillColor="rgba(0, 0, 255, 0.3)"
-                strokeColor="#0000FF"
-                strokeWidth={2}
-                zIndex={10}
-              />
-            );
+                         // Convert hex color to rgba for proper opacity handling
+             const hexToRgba = (hex: string, alpha: number) => {
+               const r = parseInt(hex.slice(1, 3), 16);
+               const g = parseInt(hex.slice(3, 5), 16);
+               const b = parseInt(hex.slice(5, 7), 16);
+               return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+             };
+             
+             return (
+               <Polygon
+                 key={`polygon-${polygon.id}`}
+                 coordinates={validCoordinates}
+                 fillColor={hexToRgba(polygon.color, polygon.opacity)}
+                 strokeColor={polygon.color}
+                 strokeWidth={2}
+                 zIndex={10}
+               />
+             );
           })}
 
           {/* Place markers */}
-          {validPlaces.map((place) => (
-            <PlaceMarker
-              key={place.id}
-              place={place}
-              isSelected={selectedPlaceId === place.id}
-              onPress={() => onMarkerPress(place.id)}
-            />
-          ))}
+          {validPlaces.map((place, index) => {
+            console.log(`Rendering marker ${index + 1}/${validPlaces.length}:`, place.name, place.location);
+            return (
+              <PlaceMarker
+                key={place.id}
+                place={place}
+                isSelected={selectedPlaceId === place.id}
+                onPress={() => onMarkerPress(place.id)}
+              />
+            );
+          })}
 
           {/* User location marker */}
           {userLocation && (
@@ -651,11 +608,11 @@ const PlacesMap = React.memo(
 );
 
 // Main component
-export function PlacesResult({
+export function BuyHouseResult({
   data,
   onPlaceSelect,
   isLoading = false,
-}: PlacesResultProps) {
+}: BuyHouseResultProps) {
   const {
     location: userLocation,
     isLoading: locationLoading,
@@ -670,7 +627,23 @@ export function PlacesResult({
 
   // Get dataset name and features
   const datasetName = data?.datasetName;
-  const features = data?.[datasetName]?.content?.features;
+  let features = data?.[datasetName]?.features || data?.[datasetName]?.content?.features;
+  
+  // If still no features, try to find them in the data structure
+  if (!features && data) {
+    // Look for any property that contains features
+    for (const key in data) {
+      if (data[key] && typeof data[key] === 'object' && data[key].features) {
+        features = data[key].features;
+        console.log('Found features in data key:', key);
+        break;
+      }
+    }
+  }
+  
+  // Extract Redfin data
+  const redfinUrl = data?.redfinUrl;
+  const redfinDescription = data?.redfinDescription;
 
   // Try to get location if not available
   React.useEffect(() => {
@@ -680,7 +653,22 @@ export function PlacesResult({
   }, [userLocation, locationLoading, locationError, getCurrentLocation]);
 
   // Process GeoJSON data using custom hook
-  const { places, isochrones } = usePlacesData(features);
+  const { places, polygons } = useBuyHouseData(features);
+  
+  // Debug logging
+  console.log('BuyHouseResult debug:', {
+    datasetName,
+    hasFeatures: !!features,
+    featuresLength: features?.length,
+    placesLength: places?.length,
+    polygonsLength: polygons?.length,
+    dataKeys: Object.keys(data || {}),
+  });
+  
+  // Log first feature structure if available
+  if (features && features.length > 0) {
+    console.log('First feature structure:', JSON.stringify(features[0], null, 2));
+  }
 
   // Auto-select first place
   React.useEffect(() => {
@@ -697,8 +685,8 @@ export function PlacesResult({
 
   // Calculate map region
   const mapRegion = useMemo(
-    () => calculateMapRegion(places, selectedPlaceId, isochrones),
-    [places, selectedPlaceId, isochrones]
+    () => calculateMapRegion(places, selectedPlaceId, polygons),
+    [places, selectedPlaceId, polygons]
   );
 
   // Event handlers
@@ -729,14 +717,14 @@ export function PlacesResult({
   const handleMarkerPress = useCallback((placeId: string) => {
     setSelectedPlaceId(placeId);
     // Scroll to the corresponding candidate view
-    const candidateIndex = places.findIndex((c: Place) => c.id === placeId);
+    const candidateIndex = places.findIndex((c: BuyHousePlace) => c.id === placeId);
     if (candidateIndex !== -1 && scrollViewRef.current) {
       scrollViewRef.current.scrollTo({
         x: candidateIndex * 292, // 280 (width) + 12 (marginRight)
         animated: true,
       });
     }
-  }, []);
+  }, [places]);
 
   // Show loading state
   if (
@@ -754,16 +742,17 @@ export function PlacesResult({
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <Text style={styles.headerText}>️Places Found</Text>
-      </View> */}
-
+      {/* House Description */}
+      <HouseDescription 
+        redfinDescription={redfinDescription}
+        redfinUrl={redfinUrl}
+      />
+      
       {/* Map */}
       {places.length > 0 && mapRegion && mapViewRef && (
-        <PlacesMap
+        <BuyHouseMap
           places={places}
-          isochronePolygons={isochrones}
+          polygons={polygons}
           selectedPlaceId={selectedPlaceId}
           userLocation={userLocation}
           mapRegion={mapRegion}
@@ -778,7 +767,7 @@ export function PlacesResult({
         horizontal
         showsHorizontalScrollIndicator={false}
       >
-        {places.map((place: Place, index: number) => (
+        {places.map((place: BuyHousePlace, index: number) => (
           <TouchableOpacity
             key={place.id}
             onPress={() => handlePlacePress(place.id)}
@@ -813,14 +802,33 @@ export function PlacesResult({
                 {place.name}
               </Text>
 
-              {/* Distance */}
+              {/* Category and Distance */}
               <View
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
                   marginBottom: 8,
+                  gap: 8,
                 }}
               >
+                <View
+                  style={{
+                    backgroundColor: place.color + '20',
+                    paddingHorizontal: 8,
+                    paddingVertical: 2,
+                    borderRadius: 12,
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      color: place.color,
+                      fontWeight: '500',
+                    }}
+                  >
+                    {place.category}
+                  </Text>
+                </View>
                 <Text
                   style={{
                     fontSize: 12,
@@ -849,31 +857,33 @@ export function PlacesResult({
               </Text>
 
               {/* Categories */}
-              <View
-                style={{
-                  flexDirection: 'row',
-                  flexWrap: 'wrap',
-                  marginBottom: 12,
-                }}
-              >
-                {place.categories.map((category) => (
-                  <View
-                    key={category.id}
-                    style={{
-                      backgroundColor: '#f8f9fa',
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 6,
-                      marginRight: 6,
-                      marginBottom: 4,
-                    }}
-                  >
-                    <Text style={{ fontSize: 12, color: '#495057' }}>
-                      {category.name}
-                    </Text>
-                  </View>
-                ))}
-              </View>
+              {place.categories && place.categories.length > 0 && (
+                <View
+                  style={{
+                    flexDirection: 'row',
+                    flexWrap: 'wrap',
+                    marginBottom: 12,
+                  }}
+                >
+                  {place.categories.map((category) => (
+                    <View
+                      key={category.id}
+                      style={{
+                        backgroundColor: '#f8f9fa',
+                        paddingHorizontal: 8,
+                        paddingVertical: 4,
+                        borderRadius: 6,
+                        marginRight: 6,
+                        marginBottom: 4,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, color: '#495057' }}>
+                        {category.name}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              )}
 
               {/* Contact Actions */}
               <View style={{ flexDirection: 'row', gap: 8 }}>
@@ -925,33 +935,10 @@ export function PlacesResult({
                   </TouchableOpacity>
                 )}
               </View>
-
-              {/* Additional Info */}
-              {(place.socialMedia || place.relatedPlaces?.parent) && (
-                <View
-                  style={{
-                    marginTop: 8,
-                    paddingTop: 8,
-                    borderTopWidth: 1,
-                    borderTopColor: '#e9ecef',
-                  }}
-                >
-                  {place.socialMedia?.twitter && (
-                    <Text style={{ fontSize: 12, color: '#6c757d' }}>
-                      🐦 @{place.socialMedia.twitter}
-                    </Text>
-                  )}
-                  {place.relatedPlaces?.parent && (
-                    <Text style={{ fontSize: 12, color: '#6c757d' }}>
-                      🏢 Part of: {place.relatedPlaces.parent.name}
-                    </Text>
-                  )}
-                </View>
-              )}
             </View>
           </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
   );
-}
+} 

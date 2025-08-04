@@ -16,6 +16,9 @@ const nextConfig: NextConfig = {
       '@openassistant/places': path.resolve(
         '/Users/xun/github/openassistant/packages/tools/places/src'
       ),
+      '@openassistant/osm': path.resolve(
+        '/Users/xun/github/openassistant/packages/tools/osm/src'
+      ),
     };
     return config;
   },

@@ -6,3 +6,5 @@ node_modules
 .env.production.local
 .expo
 .DS_Store
+.pnp.cjs
+.pnp.loader.mjs

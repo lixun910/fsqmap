@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text } from 'react-native';
 import { GeotaggingResult } from './GeotaggingResult';
 import { PlacesResult } from './PlacesResult';
+import { BuyHouseResult } from './BuyHouseResult';
 
 interface ToolResultProps {
   toolCallId: string;
@@ -48,6 +49,16 @@ export function ToolResult({
     case 'findPlace':
       return (
         <PlacesResult data={toolData} isLoading={isLoading} />
+      );
+    
+    case 'buyHouse':
+      return (
+        <BuyHouseResult 
+          data={toolData} 
+          isLoading={isLoading}
+          redfinUrl={toolData?.redfinUrl || toolData?.additionalData?.redfinUrl}
+          redfinDescription={toolData?.redfinDescription || toolData?.additionalData?.redfinDescription || toolData?.llmResult?.redfinDescription}
+        />
       );
 
     default:
