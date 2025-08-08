@@ -20,7 +20,7 @@ export default function CheckIn({ onBack, onNavigateToForm }: CheckInProps) {
     handleSubmitWithLocation,
     stripLocationInfo,
     toolAdditionalData,
-  } = useLocationChat({ autoSendMessage: 'Hi' });
+  } = useLocationChat({ autoSendMessage: 'Hi', placeholder: 'Check In' });
 
   return (
     <CheckInUI

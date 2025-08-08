@@ -26,6 +26,10 @@ fsqmap/
 - npm or yarn
 - Expo CLI (`npm install -g @expo/cli`)
 - OpenAI API key
+- Xcode and iOS Simulator (iPhone 15)
+  - Install Xcode from the App Store and launch it once to finish setup (accept license).
+  - In Xcode, go to Settings → Platforms (older versions: Preferences → Components) and download the latest iOS 17.x Simulator.
+  - Open the Simulator app and choose Hardware → Device → iPhone 15, or press `i` in the Expo terminal to launch the iOS simulator automatically.
 
 ## Setup Instructions
 
