@@ -28,7 +28,6 @@ For helping user to buy a house:
 - use webSearch tool to search the address using query e.g. "redfin 4440 S Oleander Dr, San Diego, CA 92115"
   - please find redfin description for this property from the search results
   - please find redfin url for this property from the search results
-  - please find the thumbnail image of the property in the format of base64 string from the search results
 - use placeSearch tool to find the following places within 5 miles of the property
   - 1. schools
   - 2. grocery stores

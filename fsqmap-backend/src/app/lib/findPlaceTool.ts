@@ -127,11 +127,6 @@ export const findPlace = extendedTool<
         }
       }
 
-      console.log(
-        '🚀 filteredPlacesFeatures: ',
-        JSON.stringify(filteredPlacesFeatures, null, 2)
-      );
-
       geojson.features = [...filteredPlacesFeatures];
 
       const isochroneGeometries = isochroneDatasetName

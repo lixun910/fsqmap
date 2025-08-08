@@ -5,7 +5,6 @@ import * as turf from '@turf/turf';
 export type BuyHouseFunctionArgs = z.ZodObject<{
   redfinDescription: z.ZodString;
   redfinUrl: z.ZodString;
-  houseThumbnail: z.ZodOptional<z.ZodString>;
   schoolsDatasetName: z.ZodString;
   groceryStoresDatasetName: z.ZodString;
   parksDatasetName: z.ZodString;
@@ -26,7 +25,6 @@ interface BuyHouseLlmResult {
 interface BuyHouseAdditionalData {
   redfinUrl?: string;
   redfinDescription?: string;
-  houseThumbnail?: string;
   datasetName?: string;
   combinedGeoJSON?: GeoJSON.FeatureCollection;
 }
@@ -104,10 +102,6 @@ export const buyHouse = extendedTool<
       .string()
       .describe('The Redfin description of the property'),
     redfinUrl: z.string().describe('The Redfin URL of the property'),
-    houseThumbnail: z
-      .string()
-      .optional()
-      .describe('Base64 encoded image content of the house thumbnail'),
     schoolsDatasetName: z
       .string()
       .describe('The name of the dataset containing schools'),
@@ -134,18 +128,17 @@ export const buyHouse = extendedTool<
       .describe(
         'The name of the dataset containing 5 minutes drive distance polygon'
       ),
-            tenMinsDriveDatasetName: z
+    tenMinsDriveDatasetName: z
       .string()
-              .describe(
-          'The name of the dataset containing 10 minutes drive distance polygon'
-        ),
+      .describe(
+        'The name of the dataset containing 10 minutes drive distance polygon'
+      ),
   }),
   execute: async (args, options): Promise<ExecuteBuyHouseResult> => {
     try {
       const {
         redfinDescription,
         redfinUrl,
-        houseThumbnail,
         schoolsDatasetName,
         groceryStoresDatasetName,
         parksDatasetName,
@@ -293,7 +286,10 @@ export const buyHouse = extendedTool<
         if (category.data && category.data.length > 0) {
           // Filter places within 10 minutes drive but NOT within 5 minutes drive
           const filteredPlaces = category.data.filter((place) => {
-            const isIn10MinDrive = isPointInPolygons(place, tenMinsDrivePolygon);
+            const isIn10MinDrive = isPointInPolygons(
+              place,
+              tenMinsDrivePolygon
+            );
             const isIn5MinDrive = isPointInPolygons(
               place,
               fiveMinsDrivePolygon
@@ -310,7 +306,7 @@ export const buyHouse = extendedTool<
             ...place,
             properties: {
               ...place.properties,
-                              category: `${category.name}`,
+              category: `${category.name}`,
               color: category.color,
               distance: place.properties?.distance || 'Unknown',
             },
@@ -329,10 +325,7 @@ export const buyHouse = extendedTool<
       // create a datasetName for the combined GeoJSON
       const datasetName = `buyHouse_${generateId()}`;
 
-      console.log(
-        'summary:',
-        summary
-      );
+      console.log('summary:', summary);
 
       return {
         llmResult: {
@@ -343,7 +336,6 @@ export const buyHouse = extendedTool<
         additionalData: {
           redfinUrl,
           redfinDescription,
-          houseThumbnail,
           datasetName,
           [datasetName]: combinedGeoJSON,
         },
@@ -469,9 +461,9 @@ function createSummary(
 
   if (totalPlaces10Min > 0) {
     summaryParts.push(
-              `Within 10 minutes drive: ${totalPlaces10Min} amenities (${summaryParts10Min.join(
-          ', '
-        )})`
+      `Within 10 minutes drive: ${totalPlaces10Min} amenities (${summaryParts10Min.join(
+        ', '
+      )})`
     );
   }
 

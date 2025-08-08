@@ -13,10 +13,11 @@ export default function SiteSelect({ onBack }: SiteSelectProps) {
       <NavigationBar title="Site Select" onBack={onBack} />
       <View style={commonStyles.centeredContainer}>
         <Text style={commonStyles.title}>
-          Site Select
+          Looking for bussines site selection?
         </Text>
         <Text style={commonStyles.description}>
-          This is the Site Select screen. Implementation coming soon.
+          I can help you get the information for the business at your location.
+          Demographics, traffics, and more.
         </Text>
       </View>
     </SafeAreaView>

@@ -60,10 +60,10 @@ export const useLocation = () => {
 
       // TESTING MODE: Return fixed coordinates for testing
       const testLocationData: LocationData = {
-        // latitude: 33.244265313491326,
-        // longitude: -111.86665736215393,
-        latitude: 33.24119094379804,
-        longitude: -111.87007934401359,
+        latitude: 33.244265313491326,
+        longitude: -111.86665736215393,
+        // latitude: 33.24119094379804,
+        // longitude: -111.87007934401359,
         accuracy: 5,
         altitude: 400,
         heading: 0,
