@@ -40,16 +40,26 @@ fsqmap/
 npm run install:all
 ```
 
-### 2. Configure OpenAI API Key
+### 2. Configure Environment Variables
 
-Create a `.env.local` file in the `fsqmap-backend` directory:
+Create a `.env.local` file in the `fsqmap-backend` directory with the required keys:
 
 ```bash
 cd fsqmap-backend
-echo "OPENAI_API_KEY=your_openai_api_key_here" > .env.local
+cat > .env.local << 'EOF'
+OPENAI_API_KEY=your_openai_api_key_here
+FSQ_TOKEN=your_foursquare_api_token_here
+MAPBOX_TOKEN=your_mapbox_access_token_here
+SERPER_API_KEY=your_serper_api_key_here
+EOF
 ```
 
-Replace `your_openai_api_key_here` with your actual OpenAI API key.
+Get OpenAI API key from https://platform.openai.com/
+Get Foursquare API token from https://developer.foursquare.com/
+Get Mapbox access token from https://account.mapbox.com/
+Get Serper API key from https://serper.dev/
+
+Replace the placeholder values with your actual API keys.
 
 ### 3. Start the Backend
 
@@ -141,6 +151,9 @@ The frontend is a React Native Expo app that:
 ### Backend (.env.local)
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+FSQ_TOKEN=your_foursquare_api_token_here
+MAPBOX_TOKEN=your_mapbox_access_token_here
+SERPER_API_KEY=your_serper_api_key_here
 ```
 
 ## Troubleshooting

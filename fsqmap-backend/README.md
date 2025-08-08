@@ -9,9 +9,12 @@ This is the Next.js backend for the FSQMap chat system using Vercel AI SDK.
 npm install
 ```
 
-2. Create a `.env.local` file in the root directory and add your OpenAI API key:
+2. Create a `.env.local` file in the root directory and add the required keys:
 ```
 OPENAI_API_KEY=your_openai_api_key_here
+FSQ_TOKEN=your_foursquare_api_token_here
+MAPBOX_TOKEN=your_mapbox_access_token_here
+SERPER_API_KEY=your_serper_api_key_here
 ```
 
 3. Run the development server:
