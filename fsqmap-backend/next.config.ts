@@ -1,5 +1,5 @@
 import type { NextConfig } from 'next';
-import path from 'path';
+// import path from 'path';
 
 const nextConfig: NextConfig = {
   typescript: {
@@ -10,18 +10,18 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
 
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@openassistant/places': path.resolve(
-        '/Users/xun/github/openassistant/packages/tools/places/src'
-      ),
-      '@openassistant/osm': path.resolve(
-        '/Users/xun/github/openassistant/packages/tools/osm/src'
-      ),
-    };
-    return config;
-  },
+  // webpack: (config) => {
+  //   config.resolve.alias = {
+  //     ...config.resolve.alias,
+  //     '@openassistant/places': path.resolve(
+  //       '/Users/xun/github/openassistant/packages/tools/places/src'
+  //     ),
+  //     '@openassistant/osm': path.resolve(
+  //       '/Users/xun/github/openassistant/packages/tools/osm/src'
+  //     ),
+  //   };
+  //   return config;
+  // },
 };
 
 export default nextConfig;

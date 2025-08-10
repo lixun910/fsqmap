@@ -15,9 +15,9 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@openassistant/places": [
-        "/Users/xun/github/openassistant/packages/tools/places/src"
-      ]
+      // "@openassistant/places": [
+      //   "/Users/xun/github/openassistant/packages/tools/places/src"
+      // ]
     },
     "plugins": [
       {
